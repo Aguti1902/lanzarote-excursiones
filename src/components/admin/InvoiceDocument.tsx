@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { Invoice } from "@/types";
 import { paymentLabel } from "@/lib/format";
 import { formatESDate } from "@/lib/date-range";
@@ -191,15 +192,14 @@ export function openInvoicePreviewWindow(
   company: InvoiceCompany,
   extras?: InvoiceExtras,
   autoPrint = false
-) {
+): { opened: boolean; downloaded: boolean } {
   const html = buildInvoiceDocumentHtml(inv, company, extras);
   const w = openWithBlob(html, autoPrint);
   if (!w) {
     downloadInvoiceHtml(inv, company, extras);
-    alert(
-      "El navegador bloqueó la ventana. Se ha descargado el documento HTML: ábralo e imprima / guarde como PDF."
-    );
+    return { opened: false, downloaded: true };
   }
+  return { opened: true, downloaded: false };
 }
 
 export function printInvoiceFromIframe(iframe: HTMLIFrameElement | null) {
@@ -221,9 +221,27 @@ export function InvoicePreviewModal({
   onClose: () => void;
 }) {
   const html = buildInvoiceDocumentHtml(invoice, company, extras);
+  const [notice, setNotice] = useState("");
+
+  function openPreview(autoPrint: boolean) {
+    const result = openInvoicePreviewWindow(invoice, company, extras, autoPrint);
+    if (!result.opened && result.downloaded) {
+      setNotice(
+        "El navegador bloqueó la ventana. Se ha descargado el documento HTML: ábralo e imprima / guarde como PDF."
+      );
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4">
       <div className="flex max-h-[95vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
+        {notice && (
+          <div className="border-b border-sand-line px-4 py-3">
+            <p className="rounded-lg bg-sky-soft px-3 py-2 text-sm text-ocean-deep">
+              {notice}
+            </p>
+          </div>
+        )}
         <iframe
           id={`invoice-preview-${invoice.id}`}
           title={`Preview ${invoice.id}`}
@@ -238,7 +256,7 @@ export function InvoicePreviewModal({
                 `invoice-preview-${invoice.id}`
               ) as HTMLIFrameElement | null;
               if (!printInvoiceFromIframe(iframe)) {
-                openInvoicePreviewWindow(invoice, company, extras, true);
+                openPreview(true);
               }
             }}
             className="rounded-md bg-ocean px-5 py-2.5 text-sm font-bold text-white hover:bg-ocean-deep"
@@ -247,9 +265,7 @@ export function InvoicePreviewModal({
           </button>
           <button
             type="button"
-            onClick={() =>
-              openInvoicePreviewWindow(invoice, company, extras, true)
-            }
+            onClick={() => openPreview(true)}
             className="rounded-md border border-sand-line px-5 py-2.5 text-sm font-bold text-ink"
           >
             Abrir e imprimir

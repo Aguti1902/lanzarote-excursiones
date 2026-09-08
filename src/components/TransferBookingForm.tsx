@@ -29,7 +29,7 @@ function calcTotal(
   return base + extras * extraRate;
 }
 
-/** Formulario de reserva (mismas casillas que en /traslados). */
+/** Formulario de reserva (mismas casillas que en /traslados-aeropuerto-lanzarote). */
 export function TransferBookingForm({
   destinations,
 }: {

@@ -11,6 +11,7 @@ const empty: SiteSettings = {
   phone: "",
   email: "",
   hours: "",
+  whatsapp: "",
   homeHeadline: "",
   homeSubheadline: "",
   homeHeroImage: "",
@@ -107,7 +108,13 @@ export default function AdminAjustesPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <section className="grid gap-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-sand-line md:grid-cols-2">
-          <h2 className="font-display text-xl md:col-span-2">Contacto y marca</h2>
+          <div className="md:col-span-2">
+            <h2 className="font-display text-xl">Datos de contacto (web pública)</h2>
+            <p className="mt-1 text-xs text-ink-muted">
+              Estos datos se muestran en cabecera, pie, página de contacto y
+              chat. Cámbielos aquí y pulse Guardar.
+            </p>
+          </div>
           <Field label="Nombre de marca">
             <input
               className={adminInput}
@@ -127,6 +134,15 @@ export default function AdminAjustesPage() {
               className={adminInput}
               value={settings.phone}
               onChange={(e) => set("phone", e.target.value)}
+              placeholder="+34 600 000 000"
+            />
+          </Field>
+          <Field label="WhatsApp">
+            <input
+              className={adminInput}
+              value={settings.whatsapp || ""}
+              onChange={(e) => set("whatsapp", e.target.value)}
+              placeholder="+34 600 000 000"
             />
           </Field>
           <Field label="Email">
@@ -142,16 +158,17 @@ export default function AdminAjustesPage() {
               className={adminInput}
               value={settings.hours}
               onChange={(e) => set("hours", e.target.value)}
+              placeholder="Contacto 24 / 7"
             />
           </Field>
-          <Field label="Dirección (contacto)">
+          <Field label="Dirección (contacto)" className="md:col-span-2">
             <input
               className={adminInput}
               value={settings.contactAddress || ""}
               onChange={(e) => set("contactAddress", e.target.value)}
             />
           </Field>
-          <Field label="Intro contacto" className="md:col-span-2">
+          <Field label="Texto introductorio (página contacto)" className="md:col-span-2">
             <textarea
               className={adminTextarea}
               value={settings.contactIntro || ""}

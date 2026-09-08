@@ -23,6 +23,7 @@ export interface SiteSettings {
   phone: string;
   email: string;
   hours: string;
+  whatsapp?: string;
   homeHeadline: string;
   homeSubheadline: string;
   homeHeroImage: string;

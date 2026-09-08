@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import QRCode from "qrcode";
 import type { Booking, SiteSettings } from "@/types";
 import { formatDate, formatPrice, paymentLabel } from "@/lib/format";
 import { formatESDate } from "@/lib/date-range";
@@ -20,6 +22,28 @@ function directionLabel(booking: Booking): string {
   return "—";
 }
 
+/** URL pública única de la reserva (confirmación + detalles). */
+export function bookingConfirmationUrl(bookingId: string): string {
+  const path = `/reserva/confirmacion?id=${encodeURIComponent(bookingId)}`;
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return `${window.location.origin}${path}`;
+  }
+  const site = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  return site ? `${site}${path}` : path;
+}
+
+export async function generateBookingQrDataUrl(
+  bookingId: string
+): Promise<string> {
+  const url = bookingConfirmationUrl(bookingId);
+  return QRCode.toDataURL(url, {
+    width: 240,
+    margin: 1,
+    errorCorrectionLevel: "M",
+    color: { dark: "#123a5c", light: "#ffffff" },
+  });
+}
+
 export function buildVoucherHtml(
   booking: Booking,
   settings: Pick<
@@ -31,7 +55,9 @@ export function buildVoucherHtml(
     | "companyAgencyId"
     | "phone"
     | "email"
-  >
+  >,
+  qrDataUrl: string,
+  publicUrl: string
 ): string {
   const company = settings.companyLegalName || settings.brandName;
   const rows: [string, string][] = [
@@ -45,7 +71,10 @@ export function buildVoucherHtml(
     ],
     ["Fecha del servicio", formatDate(booking.date)],
     ["Hora del servicio", booking.serviceTime || "—"],
-    ["Fecha de regreso", booking.returnDate ? formatDate(booking.returnDate) : "—"],
+    [
+      "Fecha de regreso",
+      booking.returnDate ? formatDate(booking.returnDate) : "—",
+    ],
     ["Hora de regreso", booking.returnTime || "—"],
     [
       "Personas",
@@ -67,7 +96,7 @@ export function buildVoucherHtml(
     rows.push(["Notas", booking.customer.notes]);
   }
 
-  const lookupUrl = `/gestionar-reserva`;
+  const shortUrl = publicUrl.replace(/^https?:\/\//, "");
 
   return `<!DOCTYPE html>
 <html lang="es">
@@ -81,10 +110,8 @@ export function buildVoucherHtml(
   .top{display:flex;justify-content:space-between;gap:24px;align-items:flex-start}
   .logo{background:#123a5c;color:#fff;padding:14px 16px;font-weight:800;min-width:160px}
   .logo small{display:block;font-weight:500;opacity:.85;margin-top:4px;font-size:11px;line-height:1.4}
-  .qr{text-align:center;font-size:11px;color:#666}
-  .qr .qr-box{display:block;width:110px;height:110px;border:2px solid #111;margin:0 auto 8px;background:
-    repeating-linear-gradient(0deg,#111 0 4px,transparent 4px 8px),
-    repeating-linear-gradient(90deg,#111 0 4px,transparent 4px 8px);opacity:.85}
+  .qr{text-align:center;font-size:11px;color:#666;max-width:140px}
+  .qr img{display:block;width:110px;height:110px;margin:0 auto 8px;border:1px solid #e5e7eb;border-radius:4px}
   .brand{margin-top:22px;color:#2563a8;font-size:12px;font-weight:700;letter-spacing:.08em}
   h1{margin:6px 0 4px;font-size:28px}
   .hint{color:#666;font-size:13px;margin:0 0 16px}
@@ -107,8 +134,9 @@ export function buildVoucherHtml(
       <div class="logo">${escapeHtml(settings.brandName)}<br/><small>${escapeHtml(company)}<br/>${escapeHtml(settings.companyAddress || "")}<br/>${settings.companyTaxId ? `CIF/NIF: ${escapeHtml(settings.companyTaxId)}` : ""}<br/>${escapeHtml(settings.phone || "")}</small></div>
     </div>
     <div class="qr">
-      <div class="qr-box"></div>
-      ESCANEÉ PARA VER LA RESERVA<br/><span style="font-size:10px">${escapeHtml(lookupUrl)}</span>
+      <img src="${qrDataUrl}" width="110" height="110" alt="QR ${escapeHtml(booking.id)}"/>
+      ESCANEÉ PARA VER LA RESERVA<br/>
+      <span style="font-size:9px;word-break:break-all">${escapeHtml(shortUrl)}</span>
     </div>
   </div>
   <p class="brand">${escapeHtml((settings.companyLegalName || settings.brandName).toUpperCase())}</p>
@@ -136,8 +164,13 @@ export function buildVoucherHtml(
 </html>`;
 }
 
-export function openVoucherWindow(booking: Booking, settings: SiteSettings) {
-  const html = buildVoucherHtml(booking, settings);
+export async function openVoucherWindow(
+  booking: Booking,
+  settings: SiteSettings
+): Promise<{ opened: boolean; downloaded: boolean }> {
+  const publicUrl = bookingConfirmationUrl(booking.id);
+  const qrDataUrl = await generateBookingQrDataUrl(booking.id);
+  const html = buildVoucherHtml(booking, settings, qrDataUrl, publicUrl);
   const blob = new Blob([html], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const w = window.open(url, "_blank");
@@ -146,9 +179,11 @@ export function openVoucherWindow(booking: Booking, settings: SiteSettings) {
     a.href = url;
     a.download = `voucher-${booking.id}.html`;
     a.click();
-    alert("Ventana bloqueada. Se descargó el voucher para abrirlo e imprimirlo.");
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    return { opened: false, downloaded: true };
   }
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  return { opened: true, downloaded: false };
 }
 
 export function VoucherModal({
@@ -160,33 +195,77 @@ export function VoucherModal({
   settings: SiteSettings;
   onClose: () => void;
 }) {
-  const html = buildVoucherHtml(booking, settings);
+  const [html, setHtml] = useState<string>("");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const publicUrl = bookingConfirmationUrl(booking.id);
+        const qrDataUrl = await generateBookingQrDataUrl(booking.id);
+        if (cancelled) return;
+        setHtml(buildVoucherHtml(booking, settings, qrDataUrl, publicUrl));
+      } catch {
+        if (!cancelled) setError("No se pudo generar el QR del voucher.");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [booking, settings]);
+
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4">
       <div className="flex max-h-[95vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
-        <iframe
-          id={`voucher-${booking.id}`}
-          title={`Voucher ${booking.id}`}
-          srcDoc={html}
-          className="h-[min(75vh,800px)] w-full border-0 bg-white"
-        />
+        {notice && (
+          <div className="border-b border-sand-line px-4 py-3">
+            <p className="rounded-lg bg-sky-soft px-3 py-2 text-sm text-ocean-deep">
+              {notice}
+            </p>
+          </div>
+        )}
+        {error ? (
+          <p className="p-8 text-center text-sm text-coral">{error}</p>
+        ) : html ? (
+          <iframe
+            id={`voucher-${booking.id}`}
+            title={`Voucher ${booking.id}`}
+            srcDoc={html}
+            className="h-[min(75vh,800px)] w-full border-0 bg-white"
+          />
+        ) : (
+          <p className="p-8 text-center text-sm text-ink-muted">
+            Generando voucher y QR…
+          </p>
+        )}
         <div className="flex flex-wrap justify-center gap-3 border-t border-sand-line px-4 py-4">
           <button
             type="button"
+            disabled={!html}
             onClick={() => {
               const iframe = document.getElementById(
                 `voucher-${booking.id}`
               ) as HTMLIFrameElement | null;
               iframe?.contentWindow?.print();
             }}
-            className="rounded-md bg-ocean px-5 py-2.5 text-sm font-bold text-white"
+            className="rounded-md bg-ocean px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50"
           >
             Imprimir / Guardar PDF
           </button>
           <button
             type="button"
-            onClick={() => openVoucherWindow(booking, settings)}
-            className="rounded-md border border-sand-line px-5 py-2.5 text-sm font-bold"
+            disabled={!html}
+            onClick={async () => {
+              const result = await openVoucherWindow(booking, settings);
+              if (!result.opened && result.downloaded) {
+                setNotice(
+                  "Ventana bloqueada. Se descargó el voucher para abrirlo e imprimirlo."
+                );
+              }
+            }}
+            className="rounded-md border border-sand-line px-5 py-2.5 text-sm font-bold disabled:opacity-50"
           >
             Abrir voucher
           </button>

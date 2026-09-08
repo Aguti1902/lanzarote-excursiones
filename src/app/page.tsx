@@ -88,7 +88,7 @@ export default async function HomePage() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/traslados"
+              href="/traslados-aeropuerto-lanzarote"
               className="inline-flex items-center gap-2 rounded-md bg-ocean px-6 py-3 text-sm font-semibold text-white hover:bg-ocean-deep"
             >
               Reservar traslado
@@ -151,7 +151,7 @@ export default async function HomePage() {
               </p>
             </div>
             <Link
-              href="/traslados"
+              href="/traslados-aeropuerto-lanzarote"
               className="text-sm font-semibold text-ocean hover:underline"
             >
               Ver todos y reservar
@@ -226,7 +226,7 @@ export default async function HomePage() {
             )}
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
-                href="/traslados"
+                href="/traslados-aeropuerto-lanzarote"
                 className="rounded-md bg-ocean px-6 py-3 text-sm font-semibold text-white hover:bg-ocean-deep"
               >
                 Reservar ahora

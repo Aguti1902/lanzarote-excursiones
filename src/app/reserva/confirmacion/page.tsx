@@ -7,7 +7,7 @@ import { formatDate, formatPrice, paymentLabel } from "@/lib/format";
 export const metadata: Metadata = {
   title: "Reserva confirmada",
   description:
-    "Confirmación de su traslado privado en Lanzarote Travels. Acceda a su voucher desde Gestionar reserva.",
+    "Confirmación y detalles de su traslado privado en Lanzarote Travels.",
 };
 
 type Props = { searchParams: Promise<{ id?: string }> };
@@ -15,17 +15,20 @@ type Props = { searchParams: Promise<{ id?: string }> };
 export default async function ConfirmacionPage({ searchParams }: Props) {
   const { id } = await searchParams;
   const bookings = await getBookings();
-  const booking = bookings.find((b) => b.id === id);
+  const booking = bookings.find(
+    (b) => b.id.toUpperCase() === String(id || "").toUpperCase()
+  );
 
   return (
     <div className="mx-auto flex max-w-lg flex-col items-center px-4 py-20 text-center md:px-6">
       <CheckCircle2 className="h-14 w-14 text-success" />
       <h1 className="mt-5 font-display text-3xl text-ink md:text-4xl">
-        ¡Reserva recibida!
+        {booking ? "Reserva confirmada" : "Reserva no encontrada"}
       </h1>
       <p className="mt-3 text-ink-muted">
-        Le hemos enviado un email de confirmación. Nuestro equipo le contactará
-        si necesita algún detalle adicional.
+        {booking
+          ? "Estos son los detalles de su traslado. Presente el voucher el día del servicio."
+          : "No encontramos una reserva con ese localizador."}
       </p>
 
       {booking ? (
@@ -34,34 +37,36 @@ export default async function ConfirmacionPage({ searchParams }: Props) {
             Localizador
           </p>
           <p className="font-display text-2xl text-ocean">{booking.id}</p>
+          <p className="mt-1 text-xs font-bold uppercase text-ink-muted">
+            {booking.status}
+          </p>
           <dl className="mt-4 space-y-2 text-sm">
-            <div className="flex justify-between gap-4">
-              <dt className="text-ink-muted">Servicio</dt>
-              <dd className="text-right font-medium">{booking.tourTitle}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-ink-muted">Fecha</dt>
-              <dd className="font-medium">{formatDate(booking.date)}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-ink-muted">Pago</dt>
-              <dd className="font-medium">
-                {paymentLabel(booking.paymentMethod)}
-              </dd>
-            </div>
-            {(booking.amountPaidCard ?? 0) > 0 && (
-              <div className="flex justify-between gap-4">
-                <dt className="text-ink-muted">Pagado online</dt>
-                <dd className="font-medium text-success">
-                  {formatPrice(booking.amountPaidCard)}
-                </dd>
-              </div>
+            <Row label="Cliente" value={booking.customer.name} />
+            <Row label="Email" value={booking.customer.email} />
+            <Row label="Teléfono" value={booking.customer.phone || "—"} />
+            <Row label="Servicio" value={booking.tourTitle} />
+            <Row label="Fecha del servicio" value={formatDate(booking.date)} />
+            <Row label="Hora" value={booking.serviceTime || "—"} />
+            {booking.returnDate && (
+              <Row
+                label="Regreso"
+                value={`${formatDate(booking.returnDate)}${
+                  booking.returnTime ? ` · ${booking.returnTime}` : ""
+                }`}
+              />
             )}
+            <Row
+              label="Personas"
+              value={`${booking.adults} adulto${booking.adults === 1 ? "" : "s"}`}
+            />
+            <Row label="Hotel" value={booking.customer.hotel || "—"} />
+            <Row
+              label="Vuelo"
+              value={booking.customer.flightNumber || "—"}
+            />
+            <Row label="Pago" value={paymentLabel(booking.paymentMethod)} />
             {booking.invoiceId && (
-              <div className="flex justify-between gap-4">
-                <dt className="text-ink-muted">Factura</dt>
-                <dd className="font-medium">{booking.invoiceId}</dd>
-              </div>
+              <Row label="Factura" value={booking.invoiceId} />
             )}
             <div className="flex justify-between gap-4 border-t border-sand-line pt-2">
               <dt className="text-ink-muted">Total</dt>
@@ -91,6 +96,15 @@ export default async function ConfirmacionPage({ searchParams }: Props) {
           Volver al inicio
         </Link>
       </div>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-4 border-b border-sand-line/60 py-1.5">
+      <dt className="text-ink-muted">{label}</dt>
+      <dd className="max-w-[60%] text-right font-medium">{value}</dd>
     </div>
   );
 }

@@ -127,7 +127,7 @@ export default async function SobreNosotrosPage() {
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                href="/traslados"
+                href="/traslados-aeropuerto-lanzarote"
                 className="rounded-md bg-ocean px-5 py-2.5 text-sm font-semibold text-white hover:bg-ocean-deep"
               >
                 Reservar traslado

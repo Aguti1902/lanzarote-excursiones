@@ -43,6 +43,28 @@ export function FacturasClient() {
   const [bookingPayments, setBookingPayments] = useState<
     Record<string, string>
   >({});
+  const [notice, setNotice] = useState("");
+
+  function extrasFor(inv: Invoice) {
+    return {
+      paymentMethod: bookingPayments[inv.bookingId],
+      bookingId: inv.bookingId,
+    };
+  }
+
+  function openInvoice(inv: Invoice, autoPrint: boolean) {
+    const result = openInvoicePreviewWindow(
+      inv,
+      company,
+      extrasFor(inv),
+      autoPrint
+    );
+    if (!result.opened && result.downloaded) {
+      setNotice(
+        "El navegador bloqueó la ventana. Se ha descargado el documento HTML: ábralo e imprima / guarde como PDF."
+      );
+    }
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -125,6 +147,21 @@ export function FacturasClient() {
           </p>
         </div>
       </div>
+
+      {notice && (
+        <div className="admin-print-hide rounded-lg bg-sky-soft px-4 py-3 text-sm text-ocean-deep ring-1 ring-sand-line">
+          <div className="flex items-start justify-between gap-3">
+            <p>{notice}</p>
+            <button
+              type="button"
+              className="shrink-0 text-xs font-bold uppercase opacity-70 hover:opacity-100"
+              onClick={() => setNotice("")}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="admin-print-hide grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
@@ -280,9 +317,7 @@ export function FacturasClient() {
                   </button>
                   <button
                     type="button"
-                    onClick={() =>
-                      openInvoicePreviewWindow(selected, company, extras, false)
-                    }
+                    onClick={() => openInvoice(selected, false)}
                     className="rounded-md border border-sand-line px-3 py-2 text-xs font-bold text-ink"
                   >
                     Abrir preview
@@ -290,9 +325,7 @@ export function FacturasClient() {
                 </div>
                 <button
                   type="button"
-                  onClick={() =>
-                    openInvoicePreviewWindow(selected, company, extras, true)
-                  }
+                  onClick={() => openInvoice(selected, true)}
                   className="rounded-md border border-sand-line px-3 py-2 text-xs font-bold text-ink"
                 >
                   Imprimir
@@ -302,12 +335,7 @@ export function FacturasClient() {
                   onClick={() => {
                     setPreviewOpen(true);
                     setTimeout(() => {
-                      openInvoicePreviewWindow(
-                        selected,
-                        company,
-                        extras,
-                        true
-                      );
+                      openInvoice(selected, true);
                     }, 150);
                   }}
                   className="rounded-md bg-ocean px-3 py-2.5 text-sm font-bold text-white hover:bg-ocean-deep"

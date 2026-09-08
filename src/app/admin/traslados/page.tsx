@@ -11,6 +11,7 @@ import {
   arrayToLines,
   linesToArray,
 } from "@/components/admin/Field";
+import { ConfirmDialog } from "@/components/WebDialog";
 
 const emptyDest = (): TransferDestination => ({
   id: "",
@@ -32,6 +33,11 @@ export default function AdminTrasladosPage() {
   const [highlightsText, setHighlightsText] = useState("");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -78,11 +84,15 @@ export default function AdminTrasladosPage() {
     await load();
   }
 
-  async function remove(id: string, name: string) {
-    if (!confirm(`¿Eliminar traslado a ${name}?`)) return;
-    await fetch(`/api/transfers?id=${encodeURIComponent(id)}`, {
+  async function removeConfirmed() {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    await fetch(`/api/transfers?id=${encodeURIComponent(pendingDelete.id)}`, {
       method: "DELETE",
     });
+    setDeleting(false);
+    setPendingDelete(null);
+    setMessage("Traslado eliminado");
     await load();
   }
 
@@ -272,7 +282,9 @@ export default function AdminTrasladosPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => remove(d.id, d.name)}
+                        onClick={() =>
+                          setPendingDelete({ id: d.id, name: d.name })
+                        }
                         className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs text-coral"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -313,6 +325,24 @@ export default function AdminTrasladosPage() {
           Guardar ventajas
         </button>
       </div>
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Eliminar destino"
+        message={
+          pendingDelete
+            ? `¿Eliminar traslado a ${pendingDelete.name}? Esta acción no se puede deshacer.`
+            : ""
+        }
+        confirmLabel="Eliminar"
+        cancelLabel="Volver"
+        danger
+        loading={deleting}
+        onConfirm={removeConfirmed}
+        onCancel={() => {
+          if (!deleting) setPendingDelete(null);
+        }}
+      />
     </div>
   );
 }

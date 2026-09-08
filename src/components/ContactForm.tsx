@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
 
 const inputClass =
@@ -17,6 +17,8 @@ export function ContactForm({ intro }: { intro?: string }) {
   const [ok, setOk] = useState(false);
   const [contactPhone, setContactPhone] = useState("+34 600 000 000");
   const [contactEmail, setContactEmail] = useState("hola@lanzarotetravels.com");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [hours, setHours] = useState("Contacto 24 / 7");
   const [address, setAddress] = useState("Lanzarote, Islas Canarias");
   const [introText, setIntroText] = useState(intro || "");
 
@@ -26,6 +28,8 @@ export function ContactForm({ intro }: { intro?: string }) {
       .then((d) => {
         if (d.settings?.phone) setContactPhone(d.settings.phone);
         if (d.settings?.email) setContactEmail(d.settings.email);
+        if (d.settings?.whatsapp) setWhatsapp(d.settings.whatsapp);
+        if (d.settings?.hours) setHours(d.settings.hours);
         if (d.settings?.contactAddress || d.settings?.companyAddress) {
           setAddress(
             d.settings.contactAddress || d.settings.companyAddress
@@ -36,7 +40,7 @@ export function ContactForm({ intro }: { intro?: string }) {
         }
       })
       .catch(() => undefined);
-  }, []);
+  }, [intro]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -62,6 +66,8 @@ export function ContactForm({ intro }: { intro?: string }) {
       setLoading(false);
     }
   }
+
+  const waDigits = (whatsapp || contactPhone).replace(/\D/g, "");
 
   return (
     <>
@@ -147,11 +153,28 @@ export function ContactForm({ intro }: { intro?: string }) {
                 {contactPhone}
               </a>
             </li>
+            {waDigits && (
+              <li className="flex items-start gap-3">
+                <MessageCircle className="mt-0.5 h-4 w-4 text-ocean" />
+                <a
+                  href={`https://wa.me/${waDigits}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-ocean"
+                >
+                  WhatsApp {whatsapp || contactPhone}
+                </a>
+              </li>
+            )}
             <li className="flex items-start gap-3">
               <Mail className="mt-0.5 h-4 w-4 text-ocean" />
               <a href={`mailto:${contactEmail}`} className="hover:text-ocean">
                 {contactEmail}
               </a>
+            </li>
+            <li className="flex items-start gap-3">
+              <Clock className="mt-0.5 h-4 w-4 text-ocean" />
+              <span>{hours}</span>
             </li>
             <li className="flex items-start gap-3">
               <MapPin className="mt-0.5 h-4 w-4 text-ocean" />

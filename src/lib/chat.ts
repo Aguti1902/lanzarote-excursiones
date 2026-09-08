@@ -23,7 +23,7 @@ Horario: ${settings.hours}
 
 Traslados privados aeropuerto ↔ hotel. Precio por vehículo (hasta 8 pasajeros).
 Pagos: tarjeta (100%) o Bizum (100%) online. Sin cobro en efectivo.
-Reserva en /traslados · Consulta en /gestionar-reserva · Contacto en /contacto
+Reserva en /traslados-aeropuerto-lanzarote · Consulta en /gestionar-reserva · Contacto en /contacto
 
 Destinos y tarifas:
 ${destLines}
@@ -42,7 +42,7 @@ function localAnswer(q: string, context: string): string | null {
   }
 
   if (/gracias|thank/.test(q)) {
-    return "¡De nada! Si quieres, te ayudo a elegir destino o a reservar en /traslados.";
+    return "¡De nada! Si quieres, te ayudo a elegir destino o a reservar en /traslados-aeropuerto-lanzarote.";
   }
 
   if (
@@ -55,7 +55,7 @@ function localAnswer(q: string, context: string): string | null {
       .filter((l) => l.startsWith("- ") && l.includes("ida"))
       .slice(0, 8)
       .join("\n");
-    return `Estas son las tarifas orientativas (por vehículo):\n${lines}\n\nPuedes reservar en /traslados.`;
+    return `Estas son las tarifas orientativas (por vehículo):\n${lines}\n\nPuedes reservar en /traslados-aeropuerto-lanzarote.`;
   }
 
   if (/pago|bizum|tarjeta|efectivo|cobro|deposito|10%/.test(q)) {
@@ -71,7 +71,7 @@ function localAnswer(q: string, context: string): string | null {
   }
 
   if (/reserva|reservar|book|contratar/.test(q)) {
-    return "Puedes reservar tu traslado en /traslados en menos de un minuto. Si ya tienes localizador, míralo en /gestionar-reserva.";
+    return "Puedes reservar tu traslado en /traslados-aeropuerto-lanzarote en menos de un minuto. Si ya tienes localizador, míralo en /gestionar-reserva.";
   }
 
   return null;
@@ -97,7 +97,7 @@ async function openAIReply(
         messages: [
           {
             role: "system",
-            content: `Eres el asistente de reservas de Lanzarote Travels (solo traslados). Responde en español, breve y amable (máx. 120 palabras). Usa solo esta información. No inventes precios. Enlaces útiles: /traslados, /gestionar-reserva, /contacto.
+            content: `Eres el asistente de reservas de Lanzarote Travels (solo traslados). Responde en español, breve y amable (máx. 120 palabras). Usa solo esta información. No inventes precios. Enlaces útiles: /traslados-aeropuerto-lanzarote, /gestionar-reserva, /contacto.
 
 ${context}`,
           },
@@ -129,7 +129,7 @@ export async function answerChat(messages: ChatMessage[]): Promise<{
 
   return {
     reply:
-      "Puedo ayudarte con destinos, precios y formas de pago de traslados. Pregunta por un destino (p. ej. Playa Blanca) o reserva en /traslados.",
+      "Puedo ayudarte con destinos, precios y formas de pago de traslados. Pregunta por un destino (p. ej. Playa Blanca) o reserva en /traslados-aeropuerto-lanzarote.",
     mode: "local",
   };
 }

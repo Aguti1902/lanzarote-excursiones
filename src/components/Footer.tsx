@@ -58,7 +58,10 @@ export function Footer() {
           </p>
           <ul className="mt-4 space-y-2 text-sm text-white/70">
             <li>
-              <Link href="/traslados" className="hover:text-white">
+              <Link
+                href="/traslados-aeropuerto-lanzarote"
+                className="hover:text-white"
+              >
                 Reservar traslado
               </Link>
             </li>

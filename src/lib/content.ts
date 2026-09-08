@@ -106,6 +106,7 @@ const defaultSettings: SiteSettings = {
   phone: "+34 600 000 000",
   email: "hola@lanzarotetravels.com",
   hours: "Contacto 24 / 7",
+  whatsapp: "+34 600 000 000",
   homeHeadline: "Traslados privados en Lanzarote",
   homeSubheadline:
     "Del aeropuerto a tu hotel con chófer privado. Te esperamos en llegadas con cartel.",

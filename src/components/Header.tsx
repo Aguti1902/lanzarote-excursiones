@@ -7,7 +7,7 @@ import { Menu, X, Phone } from "lucide-react";
 
 const links = [
   { href: "/", label: "Inicio" },
-  { href: "/traslados", label: "Traslados" },
+  { href: "/traslados-aeropuerto-lanzarote", label: "Traslados" },
   { href: "/gestionar-reserva", label: "Mi reserva" },
   { href: "/sobre-nosotros", label: "Sobre nosotros" },
   { href: "/contacto", label: "Contacto" },
@@ -80,7 +80,7 @@ export function Header() {
             {phone}
           </a>
           <Link
-            href="/traslados"
+            href="/traslados-aeropuerto-lanzarote"
             className="rounded-md bg-ocean px-4 py-2 text-sm font-semibold text-white transition hover:bg-ocean-deep"
           >
             Reservar
@@ -111,7 +111,7 @@ export function Header() {
               </Link>
             ))}
             <Link
-              href="/traslados"
+              href="/traslados-aeropuerto-lanzarote"
               onClick={() => setOpen(false)}
               className="mt-2 rounded-md bg-ocean px-4 py-3 text-center font-semibold text-white"
             >

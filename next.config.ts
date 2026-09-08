@@ -9,6 +9,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/traslados",
+        destination: "/traslados-aeropuerto-lanzarote",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

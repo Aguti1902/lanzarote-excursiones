@@ -19,6 +19,7 @@ import {
 } from "@/components/admin/DateRangeFilter";
 import { inDateRange, todayISO } from "@/lib/date-range";
 import { VoucherModal } from "@/components/VoucherDocument";
+import { ConfirmDialog } from "@/components/WebDialog";
 
 type StatusTab =
   | "all"
@@ -38,6 +39,8 @@ export function AdminReservasClient() {
   const [showCreate, setShowCreate] = useState(false);
   const [showVoucher, setShowVoucher] = useState(false);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [pendingCancelId, setPendingCancelId] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<StatusTab>("all");
@@ -160,6 +163,7 @@ export function AdminReservasClient() {
 
   async function setBookingStatus(id: string, next: BookingStatus) {
     setMessage("");
+    if (next === "cancelled") setCancelling(true);
     const endpoint =
       next === "cancelled" ? "/api/bookings/cancel" : "/api/bookings";
     const res = await fetch(endpoint, {
@@ -172,6 +176,10 @@ export function AdminReservasClient() {
       ),
     });
     const data = await res.json().catch(() => ({}));
+    if (next === "cancelled") {
+      setCancelling(false);
+      setPendingCancelId(null);
+    }
     if (!res.ok) {
       setMessage("No se pudo actualizar el estado");
       return;
@@ -439,7 +447,7 @@ export function AdminReservasClient() {
                           className="text-left text-red-600 hover:underline"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setBookingStatus(b.id, "cancelled");
+                            setPendingCancelId(b.id);
                           }}
                         >
                           Cancelar
@@ -458,6 +466,7 @@ export function AdminReservasClient() {
           booking={selected}
           onClose={() => setSelected(null)}
           onStatus={setBookingStatus}
+          onRequestCancel={() => setPendingCancelId(selected.id)}
           onInvoice={issueInvoice}
           onVoucher={() => setShowVoucher(true)}
         />
@@ -482,6 +491,22 @@ export function AdminReservasClient() {
           }}
         />
       )}
+
+      <ConfirmDialog
+        open={!!pendingCancelId}
+        title="Cancelar reserva"
+        message="¿Cancelar la reserva y solicitar la devolución del pago? Se emitirá factura abono."
+        confirmLabel="Sí, cancelar"
+        cancelLabel="Volver"
+        danger
+        loading={cancelling}
+        onConfirm={() => {
+          if (pendingCancelId) setBookingStatus(pendingCancelId, "cancelled");
+        }}
+        onCancel={() => {
+          if (!cancelling) setPendingCancelId(null);
+        }}
+      />
     </div>
   );
 }
@@ -490,12 +515,14 @@ function BookingDetailModal({
   booking,
   onClose,
   onStatus,
+  onRequestCancel,
   onInvoice,
   onVoucher,
 }: {
   booking: Booking;
   onClose: () => void;
   onStatus: (id: string, status: BookingStatus) => void;
+  onRequestCancel: () => void;
   onInvoice: (id: string) => void;
   onVoucher: () => void;
 }) {
@@ -567,7 +594,7 @@ function BookingDetailModal({
           {booking.status !== "cancelled" && (
             <button
               type="button"
-              onClick={() => onStatus(booking.id, "cancelled")}
+              onClick={onRequestCancel}
               className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-bold text-red-600"
             >
               Cancelar + devolución

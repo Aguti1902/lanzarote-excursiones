@@ -6,6 +6,7 @@ import type { Booking, SiteSettings } from "@/types";
 import { formatDate, formatPrice, paymentLabel } from "@/lib/format";
 import { PageHero } from "@/components/PageHero";
 import { VoucherModal } from "@/components/VoucherDocument";
+import { ConfirmDialog, NoticeBanner } from "@/components/WebDialog";
 
 const inputClass =
   "w-full rounded-lg border border-sand-line bg-white px-3 py-2.5 text-sm outline-none focus:border-ocean focus:ring-2 focus:ring-ocean/20";
@@ -15,6 +16,7 @@ export function ManageBookingClient() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [booking, setBooking] = useState<Booking | null>(null);
@@ -50,12 +52,8 @@ export function ManageBookingClient() {
     }
   }
 
-  async function handleCancel() {
+  async function executeCancel() {
     if (!booking) return;
-    const ok = window.confirm(
-      "¿Cancelar la reserva y solicitar la devolución del pago? Se emitirá factura abono."
-    );
-    if (!ok) return;
     setCancelling(true);
     setError("");
     setMessage("");
@@ -73,8 +71,10 @@ export function ManageBookingClient() {
       if (!res.ok) throw new Error(data.error || "No se pudo cancelar");
       setBooking(data.booking as Booking);
       setMessage(data.message || "Reserva cancelada");
+      setConfirmCancel(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error");
+      setConfirmCancel(false);
     } finally {
       setCancelling(false);
     }
@@ -116,11 +116,19 @@ export function ManageBookingClient() {
               required
             />
           </div>
-          {error && <p className="text-sm text-coral">{error}</p>}
+          {error && (
+            <NoticeBanner
+              message={error}
+              variant="error"
+              onClose={() => setError("")}
+            />
+          )}
           {message && (
-            <p className="rounded-lg bg-sky-soft px-3 py-2 text-sm text-ocean-deep">
-              {message}
-            </p>
+            <NoticeBanner
+              message={message}
+              variant="success"
+              onClose={() => setMessage("")}
+            />
           )}
           <button
             type="submit"
@@ -193,7 +201,7 @@ export function ManageBookingClient() {
                 <button
                   type="button"
                   disabled={cancelling}
-                  onClick={handleCancel}
+                  onClick={() => setConfirmCancel(true)}
                   className="flex-1 rounded-md border border-ocean px-4 py-2.5 text-sm font-bold text-ocean hover:bg-sky-soft disabled:opacity-60"
                 >
                   {cancelling
@@ -223,6 +231,20 @@ export function ManageBookingClient() {
           onClose={() => setShowVoucher(false)}
         />
       )}
+
+      <ConfirmDialog
+        open={confirmCancel}
+        title="Cancelar reserva"
+        message="¿Cancelar la reserva y solicitar la devolución del pago? Se emitirá factura abono."
+        confirmLabel="Sí, cancelar"
+        cancelLabel="Volver"
+        danger
+        loading={cancelling}
+        onConfirm={executeCancel}
+        onCancel={() => {
+          if (!cancelling) setConfirmCancel(false);
+        }}
+      />
     </>
   );
 }
