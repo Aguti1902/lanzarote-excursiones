@@ -47,6 +47,12 @@ export async function addBooking(
     amountDueCash?: number;
     amountPaidCash?: number;
     cashStatus?: CashStatus;
+    serviceTime?: string;
+    returnDate?: string;
+    returnTime?: string;
+    language?: string;
+    stripePaymentIntentId?: string;
+    refundStatus?: Booking["refundStatus"];
   }
 ): Promise<Booking> {
   const bookings = await getBookings();

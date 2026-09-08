@@ -7,7 +7,7 @@ import { PageHero } from "@/components/PageHero";
 const inputClass =
   "w-full rounded-lg border border-sand-line bg-white px-3 py-2.5 text-sm outline-none focus:border-ocean focus:ring-2 focus:ring-ocean/20";
 
-export function ContactForm() {
+export function ContactForm({ intro }: { intro?: string }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -18,6 +18,7 @@ export function ContactForm() {
   const [contactPhone, setContactPhone] = useState("+34 600 000 000");
   const [contactEmail, setContactEmail] = useState("hola@lanzarotetravels.com");
   const [address, setAddress] = useState("Lanzarote, Islas Canarias");
+  const [introText, setIntroText] = useState(intro || "");
 
   useEffect(() => {
     fetch("/api/settings")
@@ -29,6 +30,9 @@ export function ContactForm() {
           setAddress(
             d.settings.contactAddress || d.settings.companyAddress
           );
+        }
+        if (d.settings?.contactIntro && !intro) {
+          setIntroText(d.settings.contactIntro);
         }
       })
       .catch(() => undefined);
@@ -64,7 +68,10 @@ export function ContactForm() {
       <PageHero
         image="/images/heroes/about.jpg"
         title="¿Cómo podemos ayudarle?"
-        subtitle="Estamos para resolver todas sus dudas. Contacto 24 / 7."
+        subtitle={
+          introText ||
+          "Estamos para resolver todas sus dudas. Contacto 24 / 7."
+        }
         compact
       />
 

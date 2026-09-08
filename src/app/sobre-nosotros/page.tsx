@@ -3,15 +3,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle2, Clock, Plane, Shield } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
+import { FaqSection } from "@/components/FaqSection";
 import { getSettings } from "@/lib/content";
+import { parseFaqs } from "@/lib/faqs";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Sobre nosotros",
-  description:
-    "Conoce Lanzarote Travels: traslados privados aeropuerto ↔ hotel con chófer local.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSettings();
+  return {
+    title: settings.seoAboutTitle || "Sobre nosotros",
+    description:
+      settings.seoAboutDescription ||
+      "Conoce Lanzarote Travels: traslados privados aeropuerto ↔ hotel con chófer local.",
+  };
+}
 
 export default async function SobreNosotrosPage() {
   const settings = await getSettings();
@@ -20,6 +26,7 @@ export default async function SobreNosotrosPage() {
     .split("\n")
     .map((v) => v.trim())
     .filter(Boolean);
+  const faqs = parseFaqs(settings.aboutFaqs);
 
   return (
     <>
@@ -135,6 +142,10 @@ export default async function SobreNosotrosPage() {
           </div>
         </div>
       </section>
+
+      <div className="border-t border-sand-line bg-sky-soft/40">
+        <FaqSection title="Preguntas frecuentes" items={faqs} />
+      </div>
     </>
   );
 }

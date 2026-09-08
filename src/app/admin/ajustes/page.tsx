@@ -14,6 +14,11 @@ const empty: SiteSettings = {
   homeHeadline: "",
   homeSubheadline: "",
   homeHeroImage: "",
+  homeExtraText: "",
+  homeFeatures: "",
+  homeCtaTitle: "",
+  homeCtaText: "",
+  homeFaqs: "",
   aboutTitle: "",
   aboutLead: "",
   aboutText: "",
@@ -21,11 +26,24 @@ const empty: SiteSettings = {
   aboutImageSecondary: "",
   aboutValues: "",
   aboutPromise: "",
+  aboutFaqs: "",
   transferIntro: "",
   transferHeroImage: "",
+  transferFaqs: "",
   contactAddress: "",
+  contactIntro: "",
   seoTitle: "",
   seoDescription: "",
+  seoHomeTitle: "",
+  seoHomeDescription: "",
+  seoAboutTitle: "",
+  seoAboutDescription: "",
+  seoTransfersTitle: "",
+  seoTransfersDescription: "",
+  seoContactTitle: "",
+  seoContactDescription: "",
+  seoManageTitle: "",
+  seoManageDescription: "",
   companyLegalName: "",
   companyTaxId: "",
   companyAddress: "",
@@ -76,8 +94,8 @@ export default function AdminAjustesPage() {
       <div>
         <h1 className="font-display text-3xl text-ink">Ajustes de la web</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Textos, SEO, imágenes y datos fiscales. Todo sincronizado con la web
-          pública.
+          Textos, SEO, FAQs, imágenes y datos fiscales. Todo sincronizado con la
+          web pública.
         </p>
       </div>
 
@@ -133,24 +151,107 @@ export default function AdminAjustesPage() {
               onChange={(e) => set("contactAddress", e.target.value)}
             />
           </Field>
+          <Field label="Intro contacto" className="md:col-span-2">
+            <textarea
+              className={adminTextarea}
+              value={settings.contactIntro || ""}
+              onChange={(e) => set("contactIntro", e.target.value)}
+            />
+          </Field>
         </section>
 
         <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-sand-line">
-          <h2 className="font-display text-xl">SEO</h2>
-          <Field label="Título SEO (inicio)">
-            <input
-              className={adminInput}
-              value={settings.seoTitle || ""}
-              onChange={(e) => set("seoTitle", e.target.value)}
-            />
-          </Field>
-          <Field label="Meta description">
-            <textarea
-              className={adminTextarea}
-              value={settings.seoDescription || ""}
-              onChange={(e) => set("seoDescription", e.target.value)}
-            />
-          </Field>
+          <h2 className="font-display text-xl">SEO por página</h2>
+          <p className="text-xs text-ink-muted">
+            Si deja un campo vacío, se usa el SEO general o el título por
+            defecto.
+          </p>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="SEO general · título">
+              <input
+                className={adminInput}
+                value={settings.seoTitle || ""}
+                onChange={(e) => set("seoTitle", e.target.value)}
+              />
+            </Field>
+            <Field label="SEO general · description">
+              <textarea
+                className={adminTextarea}
+                value={settings.seoDescription || ""}
+                onChange={(e) => set("seoDescription", e.target.value)}
+              />
+            </Field>
+            <Field label="Inicio · título">
+              <input
+                className={adminInput}
+                value={settings.seoHomeTitle || ""}
+                onChange={(e) => set("seoHomeTitle", e.target.value)}
+              />
+            </Field>
+            <Field label="Inicio · description">
+              <textarea
+                className={adminTextarea}
+                value={settings.seoHomeDescription || ""}
+                onChange={(e) => set("seoHomeDescription", e.target.value)}
+              />
+            </Field>
+            <Field label="Sobre nosotros · título">
+              <input
+                className={adminInput}
+                value={settings.seoAboutTitle || ""}
+                onChange={(e) => set("seoAboutTitle", e.target.value)}
+              />
+            </Field>
+            <Field label="Sobre nosotros · description">
+              <textarea
+                className={adminTextarea}
+                value={settings.seoAboutDescription || ""}
+                onChange={(e) => set("seoAboutDescription", e.target.value)}
+              />
+            </Field>
+            <Field label="Traslados · título">
+              <input
+                className={adminInput}
+                value={settings.seoTransfersTitle || ""}
+                onChange={(e) => set("seoTransfersTitle", e.target.value)}
+              />
+            </Field>
+            <Field label="Traslados · description">
+              <textarea
+                className={adminTextarea}
+                value={settings.seoTransfersDescription || ""}
+                onChange={(e) => set("seoTransfersDescription", e.target.value)}
+              />
+            </Field>
+            <Field label="Contacto · título">
+              <input
+                className={adminInput}
+                value={settings.seoContactTitle || ""}
+                onChange={(e) => set("seoContactTitle", e.target.value)}
+              />
+            </Field>
+            <Field label="Contacto · description">
+              <textarea
+                className={adminTextarea}
+                value={settings.seoContactDescription || ""}
+                onChange={(e) => set("seoContactDescription", e.target.value)}
+              />
+            </Field>
+            <Field label="Gestionar reserva · título">
+              <input
+                className={adminInput}
+                value={settings.seoManageTitle || ""}
+                onChange={(e) => set("seoManageTitle", e.target.value)}
+              />
+            </Field>
+            <Field label="Gestionar reserva · description">
+              <textarea
+                className={adminTextarea}
+                value={settings.seoManageDescription || ""}
+                onChange={(e) => set("seoManageDescription", e.target.value)}
+              />
+            </Field>
+          </div>
         </section>
 
         <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-sand-line">
@@ -167,6 +268,41 @@ export default function AdminAjustesPage() {
               className={adminTextarea}
               value={settings.homeSubheadline}
               onChange={(e) => set("homeSubheadline", e.target.value)}
+            />
+          </Field>
+          <Field label="Texto extra (párrafos con línea en blanco)">
+            <textarea
+              className={`${adminTextarea} min-h-[120px]`}
+              value={settings.homeExtraText || ""}
+              onChange={(e) => set("homeExtraText", e.target.value)}
+            />
+          </Field>
+          <Field label="Bloques destacados (Título || Texto, uno por línea)">
+            <textarea
+              className={`${adminTextarea} min-h-[120px]`}
+              value={settings.homeFeatures || ""}
+              onChange={(e) => set("homeFeatures", e.target.value)}
+            />
+          </Field>
+          <Field label="CTA · título">
+            <input
+              className={adminInput}
+              value={settings.homeCtaTitle || ""}
+              onChange={(e) => set("homeCtaTitle", e.target.value)}
+            />
+          </Field>
+          <Field label="CTA · texto">
+            <textarea
+              className={adminTextarea}
+              value={settings.homeCtaText || ""}
+              onChange={(e) => set("homeCtaText", e.target.value)}
+            />
+          </Field>
+          <Field label="FAQs inicio (Pregunta || Respuesta, una por línea)">
+            <textarea
+              className={`${adminTextarea} min-h-[140px]`}
+              value={settings.homeFaqs || ""}
+              onChange={(e) => set("homeFaqs", e.target.value)}
             />
           </Field>
           <ImageField
@@ -213,6 +349,13 @@ export default function AdminAjustesPage() {
               onChange={(e) => set("aboutPromise", e.target.value)}
             />
           </Field>
+          <Field label="FAQs sobre nosotros (Pregunta || Respuesta)">
+            <textarea
+              className={`${adminTextarea} min-h-[120px]`}
+              value={settings.aboutFaqs || ""}
+              onChange={(e) => set("aboutFaqs", e.target.value)}
+            />
+          </Field>
           <div className="grid gap-4 md:grid-cols-2">
             <ImageField
               label="Imagen principal"
@@ -236,6 +379,13 @@ export default function AdminAjustesPage() {
               onChange={(e) => set("transferIntro", e.target.value)}
             />
           </Field>
+          <Field label="FAQs traslados (Pregunta || Respuesta)">
+            <textarea
+              className={`${adminTextarea} min-h-[140px]`}
+              value={settings.transferFaqs || ""}
+              onChange={(e) => set("transferFaqs", e.target.value)}
+            />
+          </Field>
           <ImageField
             label="Imagen hero traslados"
             value={settings.transferHeroImage}
@@ -245,7 +395,7 @@ export default function AdminAjustesPage() {
 
         <section className="grid gap-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-sand-line md:grid-cols-2">
           <h2 className="font-display text-xl md:col-span-2">
-            Datos fiscales (facturas)
+            Datos fiscales (facturas / voucher)
           </h2>
           <Field label="Razón social">
             <input

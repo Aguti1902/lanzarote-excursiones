@@ -19,6 +19,9 @@ export function TransferBookingForm({
     "airport_to_hotel" | "hotel_to_airport" | "return"
   >("airport_to_hotel");
   const [date, setDate] = useState("");
+  const [serviceTime, setServiceTime] = useState("12:00");
+  const [returnDate, setReturnDate] = useState("");
+  const [returnTime, setReturnTime] = useState("10:00");
   const [adults, setAdults] = useState(2);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [name, setName] = useState("");
@@ -50,6 +53,10 @@ export function TransferBookingForm({
       setError("Complete los campos obligatorios.");
       return;
     }
+    if (direction === "return" && !returnDate) {
+      setError("Indique la fecha de regreso.");
+      return;
+    }
     setLoading(true);
     try {
       const dirLabel =
@@ -66,6 +73,9 @@ export function TransferBookingForm({
           type: "transfer",
           tourTitle: `Traslado ${dirLabel}`,
           date,
+          serviceTime,
+          returnDate: direction === "return" ? returnDate : undefined,
+          returnTime: direction === "return" ? returnTime : undefined,
           adults,
           children: 0,
           totalPrice: total,
@@ -142,6 +152,45 @@ export function TransferBookingForm({
             required
           />
         </label>
+        <label className="block">
+          <span className="mb-1 block text-sm font-medium">Hora servicio *</span>
+          <input
+            type="time"
+            className={inputClass}
+            value={serviceTime}
+            onChange={(e) => setServiceTime(e.target.value)}
+            required
+          />
+        </label>
+        {direction === "return" && (
+          <>
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium">
+                Fecha regreso *
+              </span>
+              <input
+                type="date"
+                className={inputClass}
+                value={returnDate}
+                min={date || new Date().toISOString().slice(0, 10)}
+                onChange={(e) => setReturnDate(e.target.value)}
+                required
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium">
+                Hora regreso *
+              </span>
+              <input
+                type="time"
+                className={inputClass}
+                value={returnTime}
+                onChange={(e) => setReturnTime(e.target.value)}
+                required
+              />
+            </label>
+          </>
+        )}
         <label className="block">
           <span className="mb-1 block text-sm font-medium">Pasajeros</span>
           <input

@@ -95,15 +95,14 @@ export function DateRangeFilter({
                 onChange={(e) => onTo(e.target.value)}
               />
             </label>
-            {(from || to) && (
-              <button
-                type="button"
-                onClick={onClear}
-                className="rounded-md px-3 py-2 text-xs font-bold text-ink-muted hover:bg-sky-soft"
-              >
-                Limpiar ✕
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={onClear}
+              className="rounded-md px-3 py-2 text-xs font-bold text-ink-muted hover:bg-sky-soft"
+              title="Quitar filtro de fechas"
+            >
+              Limpiar ✕
+            </button>
           </div>
         </div>
         <p className="pb-2 text-xs text-ink-muted">{hint}</p>

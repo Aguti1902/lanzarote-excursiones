@@ -3,6 +3,7 @@ import { Fraunces, Manrope } from "next/font/google";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { AIChat } from "@/components/AIChat";
+import { getSettings } from "@/lib/content";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -15,17 +16,23 @@ const fraunces = Fraunces({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Lanzarote Travels - Traslados privados aeropuerto Lanzarote",
-    template: "%s | Lanzarote Travels",
-  },
-  description:
-    "Traslados privados desde y hacia el aeropuerto de Lanzarote. Recogida en terminal con cartel, seguimiento de vuelos y tarifa fija por vehículo.",
-  icons: {
-    icon: "/favicon.ico",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSettings();
+  const title =
+    settings.seoTitle ||
+    "Lanzarote Travels - Traslados privados aeropuerto Lanzarote";
+  const description =
+    settings.seoDescription ||
+    "Traslados privados desde y hacia el aeropuerto de Lanzarote. Recogida en terminal con cartel, seguimiento de vuelos y tarifa fija por vehículo.";
+  return {
+    title: {
+      default: title,
+      template: `%s | ${settings.brandName || "Lanzarote Travels"}`,
+    },
+    description,
+    icons: { icon: "/favicon.ico" },
+  };
+}
 
 export default function RootLayout({
   children,

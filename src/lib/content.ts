@@ -109,6 +109,12 @@ const defaultSettings: SiteSettings = {
   homeSubheadline:
     "Del aeropuerto a tu hotel con chófer privado. Te esperamos en llegadas con cartel.",
   homeHeroImage: "/images/heroes/transfer.jpg",
+  homeExtraText: "",
+  homeFeatures: "",
+  homeCtaTitle: "¿Listo para llegar sin estrés?",
+  homeCtaText:
+    "Reserva tu traslado privado en minutos. Cancelación gratuita hasta 48 horas antes.",
+  homeFaqs: "",
   aboutTitle: "Traslados con criterio local",
   aboutLead:
     "Somos una empresa local especializada en traslados privados aeropuerto ↔ hotel en Lanzarote.",
@@ -117,10 +123,13 @@ const defaultSettings: SiteSettings = {
   aboutImageSecondary: "/images/heroes/about-2.jpg",
   aboutValues: "",
   aboutPromise: "",
+  aboutFaqs: "",
   transferIntro:
     "Disfrute más de la isla y menos del aeropuerto, reservando un traslado privado a su hotel. Nuestro chófer le esperará en la terminal de llegadas.",
   transferHeroImage: "/images/heroes/transfer.jpg",
+  transferFaqs: "",
   contactAddress: "Lanzarote, Islas Canarias",
+  contactIntro: "",
   seoTitle: "Lanzarote Travels - Traslados privados aeropuerto Lanzarote",
   seoDescription:
     "Traslados privados desde y hacia el aeropuerto de Lanzarote. Recogida en terminal con cartel, seguimiento de vuelos y tarifa fija por vehículo.",

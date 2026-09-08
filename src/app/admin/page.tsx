@@ -102,9 +102,8 @@ export default function AdminDashboard() {
         onFrom={setFrom}
         onTo={setTo}
         onClear={() => {
-          const d = defaultLast7Days();
-          setFrom(d.from);
-          setTo(d.to);
+          setFrom("");
+          setTo("");
         }}
         dateField={dateField}
         onDateField={setDateField}

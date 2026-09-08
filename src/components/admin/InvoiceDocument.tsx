@@ -46,12 +46,12 @@ export function buildInvoiceDocumentHtml(
   *{box-sizing:border-box}
   body{margin:0;font-family:system-ui,-apple-system,sans-serif;color:#1a1a1a;background:#fff}
   .sheet{max-width:820px;margin:0 auto;padding:28px 32px 40px}
-  .accent{height:4px;background:#e85d04;margin:-28px -32px 24px}
+  .accent{height:4px;background:#2563a8;margin:-28px -32px 24px}
   .head{display:flex;justify-content:space-between;gap:24px;align-items:flex-start}
   .logo{background:#123a5c;color:#fff;padding:14px 18px;font-weight:800;letter-spacing:.02em;min-width:180px}
   .logo small{display:block;font-weight:500;opacity:.85;margin-top:4px;font-size:11px}
   .meta{text-align:right}
-  .meta .kind{color:#e85d04;font-size:12px;font-weight:700;letter-spacing:.08em}
+  .meta .kind{color:#2563a8;font-size:12px;font-weight:700;letter-spacing:.08em}
   .meta h1{margin:4px 0 8px;font-size:28px}
   .meta p{margin:2px 0;font-size:13px;color:#555}
   .cols{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin:28px 0 8px}
@@ -60,7 +60,7 @@ export function buildInvoiceDocumentHtml(
   table{width:100%;border-collapse:collapse;margin-top:22px}
   th{background:#f3f4f6;text-align:left;padding:10px 12px;font-size:11px;letter-spacing:.06em;color:#555}
   td{padding:12px;border-bottom:1px solid #e5e7eb;font-size:13px}
-  th:last-child,td:last-child{text-align:right}
+  th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3),th:last-child,td:last-child{text-align:right}
   .totals{margin-top:18px;margin-left:auto;width:260px;font-size:13px}
   .totals div{display:flex;justify-content:space-between;padding:4px 0}
   .totals .grand{border-top:2px solid #111;margin-top:8px;padding-top:10px;font-size:18px;font-weight:800}
@@ -139,6 +139,53 @@ export function buildInvoiceDocumentHtml(
 </html>`;
 }
 
+function openWithBlob(html: string, autoPrint: boolean): Window | null {
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  // Sin noopener: necesitamos acceder a document/print
+  const w = window.open(url, "_blank");
+  if (!w) {
+    URL.revokeObjectURL(url);
+    return null;
+  }
+  const cleanup = () => {
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  };
+  if (autoPrint) {
+    const tryPrint = () => {
+      try {
+        w.focus();
+        w.print();
+      } catch {
+        /* ignore */
+      }
+      cleanup();
+    };
+    // blob URLs suelen disparar load; fallback por tiempo
+    setTimeout(tryPrint, 400);
+  } else {
+    cleanup();
+  }
+  return w;
+}
+
+export function downloadInvoiceHtml(
+  inv: Invoice,
+  company: InvoiceCompany,
+  extras?: InvoiceExtras
+) {
+  const html = buildInvoiceDocumentHtml(inv, company, extras);
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${inv.id}.html`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export function openInvoicePreviewWindow(
   inv: Invoice,
   company: InvoiceCompany,
@@ -146,18 +193,20 @@ export function openInvoicePreviewWindow(
   autoPrint = false
 ) {
   const html = buildInvoiceDocumentHtml(inv, company, extras);
-  const w = window.open("", "_blank", "noopener,noreferrer,width=900,height=1000");
+  const w = openWithBlob(html, autoPrint);
   if (!w) {
-    alert("Permita ventanas emergentes para previsualizar/descargar la factura.");
-    return;
+    downloadInvoiceHtml(inv, company, extras);
+    alert(
+      "El navegador bloqueó la ventana. Se ha descargado el documento HTML: ábralo e imprima / guarde como PDF."
+    );
   }
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
-  if (autoPrint) {
-    w.focus();
-    setTimeout(() => w.print(), 350);
-  }
+}
+
+export function printInvoiceFromIframe(iframe: HTMLIFrameElement | null) {
+  if (!iframe?.contentWindow) return false;
+  iframe.contentWindow.focus();
+  iframe.contentWindow.print();
+  return true;
 }
 
 export function InvoicePreviewModal({
@@ -176,6 +225,7 @@ export function InvoicePreviewModal({
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4">
       <div className="flex max-h-[95vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
         <iframe
+          id={`invoice-preview-${invoice.id}`}
           title={`Preview ${invoice.id}`}
           srcDoc={html}
           className="h-[min(70vh,720px)] w-full border-0 bg-white"
@@ -183,12 +233,26 @@ export function InvoicePreviewModal({
         <div className="flex flex-wrap items-center justify-center gap-3 border-t border-sand-line bg-white px-4 py-4">
           <button
             type="button"
-            onClick={() =>
-              openInvoicePreviewWindow(invoice, company, extras, true)
-            }
+            onClick={() => {
+              const iframe = document.getElementById(
+                `invoice-preview-${invoice.id}`
+              ) as HTMLIFrameElement | null;
+              if (!printInvoiceFromIframe(iframe)) {
+                openInvoicePreviewWindow(invoice, company, extras, true);
+              }
+            }}
             className="rounded-md bg-ocean px-5 py-2.5 text-sm font-bold text-white hover:bg-ocean-deep"
           >
             Imprimir / Guardar PDF
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              openInvoicePreviewWindow(invoice, company, extras, true)
+            }
+            className="rounded-md border border-sand-line px-5 py-2.5 text-sm font-bold text-ink"
+          >
+            Abrir e imprimir
           </button>
           <button
             type="button"

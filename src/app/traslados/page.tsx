@@ -2,31 +2,22 @@ import type { Metadata } from "next";
 import { CheckCircle2 } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
 import { TransferBookingForm } from "@/components/TransferBookingForm";
+import { FaqSection } from "@/components/FaqSection";
 import { getSettings, getTransfersData } from "@/lib/content";
 import { formatPrice } from "@/lib/format";
+import { parseFaqs } from "@/lib/faqs";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Traslados al aeropuerto de Lanzarote",
-  description:
-    "Traslados privados desde y hacia el aeropuerto de Lanzarote. Recogida en terminal con cartel, seguimiento de vuelos y tarifa fija por vehículo.",
-};
-
-const faqs = [
-  {
-    q: "¿Dónde encontraré a mi chófer?",
-    a: "Le esperamos en la terminal de llegadas con un cartel con su nombre.",
-  },
-  {
-    q: "¿Qué pasa si mi vuelo tiene un retraso?",
-    a: "Hacemos seguimiento de vuelos y adaptamos la recogida sin coste adicional.",
-  },
-  {
-    q: "¿Cómo funciona la política de cancelación?",
-    a: "Cancelación gratuita hasta 48 horas antes del servicio.",
-  },
-];
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSettings();
+  return {
+    title: settings.seoTransfersTitle || "Traslados al aeropuerto de Lanzarote",
+    description:
+      settings.seoTransfersDescription ||
+      "Traslados privados desde y hacia el aeropuerto de Lanzarote. Recogida en terminal con cartel, seguimiento de vuelos y tarifa fija por vehículo.",
+  };
+}
 
 export default async function TrasladosPage() {
   const [transfers, settings] = await Promise.all([
@@ -38,6 +29,25 @@ export default async function TrasladosPage() {
     "Aeropuerto al hotel",
     "Hotel al aeropuerto",
     "Ida y Vuelta",
+  ];
+
+  const faqs = parseFaqs(settings.transferFaqs);
+  const fallbackFaqs = [
+    {
+      question: "¿Dónde encontraré a mi chófer?",
+      answer:
+        "Le esperamos en la terminal de llegadas con un cartel con su nombre.",
+    },
+    {
+      question: "¿Qué pasa si mi vuelo tiene un retraso?",
+      answer:
+        "Hacemos seguimiento de vuelos y adaptamos la recogida sin coste adicional.",
+    },
+    {
+      question: "¿Cómo funciona la política de cancelación?",
+      answer:
+        "Cancelación gratuita hasta 48 horas antes del servicio. Puede cancelar desde Gestionar reserva.",
+    },
   ];
 
   return (
@@ -116,28 +126,12 @@ export default async function TrasladosPage() {
         </div>
       </section>
 
-      <section className="border-t border-sand-line bg-sky-soft py-14">
-        <div className="mx-auto max-w-6xl px-4 md:px-6">
-          <h2 className="text-2xl font-bold text-ink md:text-3xl">
-            Preguntas frecuentes sobre nuestros traslados en Lanzarote
-          </h2>
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
-            {faqs.map((faq) => (
-              <details
-                key={faq.q}
-                className="rounded-lg bg-white px-5 py-4 ring-1 ring-sand-line"
-              >
-                <summary className="cursor-pointer list-none text-sm font-bold text-ink">
-                  {faq.q}
-                </summary>
-                <p className="mt-3 text-sm leading-relaxed text-ink-muted">
-                  {faq.a}
-                </p>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
+      <div className="border-t border-sand-line bg-sky-soft">
+        <FaqSection
+          title="Preguntas frecuentes sobre nuestros traslados en Lanzarote"
+          items={faqs.length ? faqs : fallbackFaqs}
+        />
+      </div>
     </>
   );
 }

@@ -97,17 +97,48 @@ export async function createInvoiceForBooking(
 export async function createCreditNoteForBooking(
   booking: Booking
 ): Promise<Invoice | null> {
-  const related = (await getInvoicesByBooking(booking.id)).find(
-    (i) => i.type === "invoice" && i.status === "issued"
-  );
-  if (!related) return null;
+  let invoices = await getInvoices();
 
-  const already = (await getInvoicesByBooking(booking.id)).find(
-    (i) => i.type === "credit_note" && i.relatedInvoiceId === related.id
-  );
-  if (already) return already;
+  let related =
+    invoices.find(
+      (i) =>
+        i.bookingId === booking.id &&
+        i.type === "invoice" &&
+        i.status === "issued"
+    ) ||
+    (booking.invoiceId
+      ? invoices.find(
+          (i) =>
+            i.id === booking.invoiceId &&
+            i.type === "invoice" &&
+            i.status === "issued"
+        )
+      : undefined);
 
-  const invoices = await getInvoices();
+  // Si cancelan sin factura previa (pago online), emitirla antes del abono.
+  if (!related) {
+    const amount = booking.amountTotal ?? booking.totalPrice ?? 0;
+    if (amount <= 0) return null;
+    related = await createInvoiceForBooking(
+      booking,
+      `Factura emitida automáticamente al cancelar la reserva ${booking.id}.`
+    );
+    invoices = await getInvoices();
+  }
+
+  const already = invoices.find(
+    (i) =>
+      i.type === "credit_note" &&
+      i.status === "issued" &&
+      (i.relatedInvoiceId === related!.id || i.bookingId === booking.id)
+  );
+  if (already) {
+    if (!booking.creditNoteId) {
+      await updateBooking(booking.id, { creditNoteId: already.id });
+    }
+    return already;
+  }
+
   const year = new Date().getFullYear();
   const number = nextNumber(invoices, year);
   const id = `ABO-${year}-${String(number).padStart(4, "0")}`;
@@ -120,7 +151,8 @@ export async function createCreditNoteForBooking(
     createdAt: new Date().toISOString(),
     customer: related.customer,
     lines: related.lines.map((l) => ({
-      ...l,
+      description: `ABONO · ${l.description}`,
+      qty: l.qty,
       unitPrice: -Math.abs(l.unitPrice),
       total: -Math.abs(l.total),
     })),
@@ -135,6 +167,7 @@ export async function createCreditNoteForBooking(
 
   invoices.unshift(credit);
   await saveInvoices(invoices);
+  await updateBooking(booking.id, { creditNoteId: credit.id });
   return credit;
 }
 

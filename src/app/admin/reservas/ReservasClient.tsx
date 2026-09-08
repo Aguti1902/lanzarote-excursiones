@@ -8,6 +8,7 @@ import type {
   Booking,
   BookingStatus,
   PaymentMethod,
+  SiteSettings,
   TransferDestination,
 } from "@/types";
 import { formatDate, formatPrice, paymentLabel } from "@/lib/format";
@@ -17,6 +18,7 @@ import {
   type DateField,
 } from "@/components/admin/DateRangeFilter";
 import { inDateRange, todayISO } from "@/lib/date-range";
+import { VoucherModal } from "@/components/VoucherDocument";
 
 type StatusTab =
   | "all"
@@ -34,6 +36,8 @@ export function AdminReservasClient() {
   const [message, setMessage] = useState("");
   const [selected, setSelected] = useState<Booking | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [showVoucher, setShowVoucher] = useState(false);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<StatusTab>("all");
@@ -59,6 +63,13 @@ export function AdminReservasClient() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((d) => setSettings(d.settings || null))
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (!focusId || !bookings.length) return;
@@ -149,20 +160,36 @@ export function AdminReservasClient() {
 
   async function setBookingStatus(id: string, next: BookingStatus) {
     setMessage("");
-    const res = await fetch("/api/bookings", {
-      method: "PATCH",
+    const endpoint =
+      next === "cancelled" ? "/api/bookings/cancel" : "/api/bookings";
+    const res = await fetch(endpoint, {
+      method: next === "cancelled" ? "POST" : "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status: next }),
+      body: JSON.stringify(
+        next === "cancelled"
+          ? { id, refund: true }
+          : { id, status: next }
+      ),
     });
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       setMessage("No se pudo actualizar el estado");
       return;
     }
-    setMessage(
-      next === "cancelled"
-        ? "Reserva cancelada. Se ha generado abono si había factura."
-        : "Estado actualizado"
-    );
+    if (next === "cancelled") {
+      setMessage(
+        data.message ||
+          (data.creditNote?.id
+            ? `Cancelada. Abono ${data.creditNote.id}${
+                data.refund?.refundId
+                  ? ` · Reembolso ${data.refund.refundId}`
+                  : ""
+              }`
+            : "Reserva cancelada")
+      );
+    } else {
+      setMessage("Estado actualizado");
+    }
     await load();
   }
 
@@ -359,6 +386,15 @@ export function AdminReservasClient() {
                         {b.invoiceId}
                       </Link>
                     )}
+                    {b.creditNoteId && (
+                      <Link
+                        href={`/admin/facturas?id=${b.creditNoteId}`}
+                        className="mt-1 block text-xs font-bold text-red-600 hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {b.creditNoteId}
+                      </Link>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-xs">
                     <p>
@@ -423,6 +459,15 @@ export function AdminReservasClient() {
           onClose={() => setSelected(null)}
           onStatus={setBookingStatus}
           onInvoice={issueInvoice}
+          onVoucher={() => setShowVoucher(true)}
+        />
+      )}
+
+      {showVoucher && selected && settings && (
+        <VoucherModal
+          booking={selected}
+          settings={settings}
+          onClose={() => setShowVoucher(false)}
         />
       )}
 
@@ -446,11 +491,13 @@ function BookingDetailModal({
   onClose,
   onStatus,
   onInvoice,
+  onVoucher,
 }: {
   booking: Booking;
   onClose: () => void;
   onStatus: (id: string, status: BookingStatus) => void;
   onInvoice: (id: string) => void;
+  onVoucher: () => void;
 }) {
   const directionLabel =
     booking.transfer?.direction === "airport_to_hotel"
@@ -502,13 +549,28 @@ function BookingDetailModal({
               </button>
             )
           )}
+          {booking.creditNoteId && (
+            <Link
+              href={`/admin/facturas?id=${booking.creditNoteId}`}
+              className="rounded-md border border-red-400 px-3 py-1.5 text-xs font-bold text-red-600"
+            >
+              Abono {booking.creditNoteId}
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={onVoucher}
+            className="rounded-md bg-ocean px-3 py-1.5 text-xs font-bold text-white"
+          >
+            Ver voucher
+          </button>
           {booking.status !== "cancelled" && (
             <button
               type="button"
               onClick={() => onStatus(booking.id, "cancelled")}
               className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-bold text-red-600"
             >
-              Cancelar reserva
+              Cancelar + devolución
             </button>
           )}
           {booking.status !== "completed" && booking.status !== "cancelled" && (

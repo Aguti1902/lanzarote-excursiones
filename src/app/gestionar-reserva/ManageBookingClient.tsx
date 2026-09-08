@@ -1,10 +1,11 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import type { Booking } from "@/types";
-import { formatPrice, paymentLabel } from "@/lib/format";
+import type { Booking, SiteSettings } from "@/types";
+import { formatDate, formatPrice, paymentLabel } from "@/lib/format";
 import { PageHero } from "@/components/PageHero";
+import { VoucherModal } from "@/components/VoucherDocument";
 
 const inputClass =
   "w-full rounded-lg border border-sand-line bg-white px-3 py-2.5 text-sm outline-none focus:border-ocean focus:ring-2 focus:ring-ocean/20";
@@ -13,12 +14,24 @@ export function ManageBookingClient() {
   const [bookingId, setBookingId] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [booking, setBooking] = useState<Booking | null>(null);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [showVoucher, setShowVoucher] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((d) => setSettings(d.settings || null))
+      .catch(() => undefined);
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
+    setMessage("");
     setBooking(null);
     setLoading(true);
     try {
@@ -34,6 +47,36 @@ export function ManageBookingClient() {
       setError(err instanceof Error ? err.message : "Error");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleCancel() {
+    if (!booking) return;
+    const ok = window.confirm(
+      "¿Cancelar la reserva y solicitar la devolución del pago? Se emitirá factura abono."
+    );
+    if (!ok) return;
+    setCancelling(true);
+    setError("");
+    setMessage("");
+    try {
+      const res = await fetch("/api/bookings/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          booking_id: booking.id,
+          email,
+          refund: true,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "No se pudo cancelar");
+      setBooking(data.booking as Booking);
+      setMessage(data.message || "Reserva cancelada");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error");
+    } finally {
+      setCancelling(false);
     }
   }
 
@@ -53,7 +96,7 @@ export function ManageBookingClient() {
         >
           <div>
             <label className="mb-1 block text-sm font-semibold">
-              Número de reserva
+              Localizador
             </label>
             <input
               className={inputClass}
@@ -74,6 +117,11 @@ export function ManageBookingClient() {
             />
           </div>
           {error && <p className="text-sm text-coral">{error}</p>}
+          {message && (
+            <p className="rounded-lg bg-sky-soft px-3 py-2 text-sm text-ocean-deep">
+              {message}
+            </p>
+          )}
           <button
             type="submit"
             disabled={loading}
@@ -89,35 +137,72 @@ export function ManageBookingClient() {
               Localizador {booking.id}
             </h2>
             <dl className="mt-4 space-y-2 text-sm">
-              <div className="flex justify-between gap-4">
-                <dt className="text-ink-muted">Servicio</dt>
-                <dd className="text-right font-bold">{booking.tourTitle}</dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-ink-muted">Fecha</dt>
-                <dd className="font-bold">{booking.date}</dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-ink-muted">Personas</dt>
-                <dd className="font-bold">{booking.adults}</dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-ink-muted">Total</dt>
-                <dd className="font-bold text-ocean">
-                  {formatPrice(booking.amountTotal ?? booking.totalPrice)}
-                </dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-ink-muted">Estado</dt>
-                <dd className="font-bold uppercase">{booking.status}</dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-ink-muted">Pago</dt>
-                <dd className="font-bold">
-                  {paymentLabel(booking.paymentMethod)}
-                </dd>
-              </div>
+              <Row label="Actividad" value={booking.tourTitle} />
+              <Row
+                label="Fecha de reserva"
+                value={
+                  booking.createdAt
+                    ? formatDate(booking.createdAt.slice(0, 10))
+                    : "—"
+                }
+              />
+              <Row label="Fecha del servicio" value={formatDate(booking.date)} />
+              <Row label="Hora del servicio" value={booking.serviceTime || "—"} />
+              <Row
+                label="Fecha de regreso"
+                value={
+                  booking.returnDate ? formatDate(booking.returnDate) : "—"
+                }
+              />
+              <Row label="Hora de regreso" value={booking.returnTime || "—"} />
+              <Row
+                label="Personas"
+                value={`${booking.adults} adulto${booking.adults === 1 ? "" : "s"}`}
+              />
+              <Row
+                label="Total"
+                value={formatPrice(booking.amountTotal ?? booking.totalPrice)}
+                highlight
+              />
+              <Row label="Estado" value={booking.status.toUpperCase()} />
+              <Row
+                label="Pago"
+                value={
+                  booking.paymentStatus === "refunded"
+                    ? "Reembolsado"
+                    : paymentLabel(booking.paymentMethod)
+                }
+              />
+              {booking.invoiceId && (
+                <Row label="Factura" value={booking.invoiceId} />
+              )}
+              {booking.creditNoteId && (
+                <Row label="Abono" value={booking.creditNoteId} />
+              )}
             </dl>
+
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => setShowVoucher(true)}
+                className="flex-1 rounded-md bg-ocean px-4 py-2.5 text-sm font-bold text-white hover:bg-ocean-deep"
+              >
+                Ver voucher
+              </button>
+              {booking.status !== "cancelled" && (
+                <button
+                  type="button"
+                  disabled={cancelling}
+                  onClick={handleCancel}
+                  className="flex-1 rounded-md border border-ocean px-4 py-2.5 text-sm font-bold text-ocean hover:bg-sky-soft disabled:opacity-60"
+                >
+                  {cancelling
+                    ? "Procesando…"
+                    : "Cancelar reserva / Devolución"}
+                </button>
+              )}
+            </div>
+
             <p className="mt-6 text-sm text-ink-muted">
               ¿Necesita cambios? Contáctenos.{" "}
               <Link
@@ -130,6 +215,35 @@ export function ManageBookingClient() {
           </div>
         )}
       </section>
+
+      {showVoucher && booking && settings && (
+        <VoucherModal
+          booking={booking}
+          settings={settings}
+          onClose={() => setShowVoucher(false)}
+        />
+      )}
     </>
+  );
+}
+
+function Row({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="flex justify-between gap-4 border-b border-sand-line/70 py-1.5">
+      <dt className="text-ink-muted">{label}</dt>
+      <dd
+        className={`text-right font-bold ${highlight ? "text-ocean" : "text-ink"}`}
+      >
+        {value}
+      </dd>
+    </div>
   );
 }

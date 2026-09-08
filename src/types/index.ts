@@ -1,8 +1,9 @@
 export type PaymentMethod = "card" | "bizum" | "pay_on_day" | "deposit_10";
 export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
 export type BookingType = "transfer";
-export type PaymentStatus = "unpaid" | "paid" | "pay_on_day" | "partial";
+export type PaymentStatus = "unpaid" | "paid" | "pay_on_day" | "partial" | "refunded";
 export type CashStatus = "pending" | "collected" | "waived" | "none";
+export type RefundStatus = "none" | "pending" | "refunded" | "failed";
 
 export interface TransferDestination {
   id: string;
@@ -23,6 +24,11 @@ export interface SiteSettings {
   homeHeadline: string;
   homeSubheadline: string;
   homeHeroImage: string;
+  homeExtraText?: string;
+  homeFeatures?: string;
+  homeCtaTitle?: string;
+  homeCtaText?: string;
+  homeFaqs?: string;
   aboutTitle: string;
   aboutLead: string;
   aboutText: string;
@@ -30,11 +36,24 @@ export interface SiteSettings {
   aboutImageSecondary: string;
   aboutValues: string;
   aboutPromise: string;
+  aboutFaqs?: string;
   transferIntro: string;
   transferHeroImage: string;
+  transferFaqs?: string;
   contactAddress?: string;
+  contactIntro?: string;
   seoTitle?: string;
   seoDescription?: string;
+  seoHomeTitle?: string;
+  seoHomeDescription?: string;
+  seoAboutTitle?: string;
+  seoAboutDescription?: string;
+  seoTransfersTitle?: string;
+  seoTransfersDescription?: string;
+  seoContactTitle?: string;
+  seoContactDescription?: string;
+  seoManageTitle?: string;
+  seoManageDescription?: string;
   companyLegalName?: string;
   companyTaxId?: string;
   companyAddress?: string;
@@ -54,6 +73,10 @@ export interface Booking {
   tourId?: string;
   tourTitle: string;
   date: string;
+  serviceTime?: string;
+  returnDate?: string;
+  returnTime?: string;
+  language?: string;
   adults: number;
   children: number;
   totalPrice: number;
@@ -66,6 +89,10 @@ export interface Booking {
   cashStatus: CashStatus;
   status: BookingStatus;
   invoiceId?: string;
+  creditNoteId?: string;
+  stripePaymentIntentId?: string;
+  stripeRefundId?: string;
+  refundStatus?: RefundStatus;
   customer: {
     name: string;
     email: string;

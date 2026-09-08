@@ -10,6 +10,7 @@ import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
 import { inDateRange } from "@/lib/date-range";
 import {
   InvoicePreviewModal,
+  downloadInvoiceHtml,
   openInvoicePreviewWindow,
   type InvoiceCompany,
 } from "@/components/admin/InvoiceDocument";
@@ -298,15 +299,34 @@ export function FacturasClient() {
                 </button>
                 <button
                   type="button"
-                  onClick={() =>
-                    openInvoicePreviewWindow(selected, company, extras, true)
-                  }
+                  onClick={() => {
+                    setPreviewOpen(true);
+                    setTimeout(() => {
+                      openInvoicePreviewWindow(
+                        selected,
+                        company,
+                        extras,
+                        true
+                      );
+                    }, 150);
+                  }}
                   className="rounded-md bg-ocean px-3 py-2.5 text-sm font-bold text-white hover:bg-ocean-deep"
                 >
                   Descargar PDF
                 </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    downloadInvoiceHtml(selected, company, extras)
+                  }
+                  className="rounded-md border border-sand-line px-3 py-2 text-xs font-bold text-ink"
+                >
+                  Descargar HTML
+                </button>
                 <p className="text-[11px] text-ink-muted">
-                  En el diálogo de impresión, elija «Guardar como PDF».
+                  En el diálogo de impresión, elija «Guardar como PDF». Si el
+                  navegador bloquea la ventana, use Previsualizar o Descargar
+                  HTML.
                 </p>
               </div>
 

@@ -6,7 +6,8 @@ import { formatDate, formatPrice, paymentLabel } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Reserva confirmada",
-  description: "Confirmación de su traslado privado en Lanzarote Travels.",
+  description:
+    "Confirmación de su traslado privado en Lanzarote Travels. Acceda a su voucher desde Gestionar reserva.",
 };
 
 type Props = { searchParams: Promise<{ id?: string }> };
