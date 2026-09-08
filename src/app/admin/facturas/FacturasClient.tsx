@@ -6,49 +6,13 @@ import Link from "next/link";
 import type { Invoice } from "@/types";
 import { formatDate, formatPrice } from "@/lib/format";
 import { adminInput } from "@/components/admin/Field";
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-function buildInvoiceHtml(
-  inv: Invoice,
-  company: { name: string; taxId: string; address: string }
-): string {
-  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>${escapeHtml(inv.id)}</title>
-<style>
-body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;color:#16324a;padding:0 16px}
-h1{font-size:24px;margin:4px 0 0}.muted{color:#5a7388;font-size:13px}
-table{width:100%;border-collapse:collapse;margin-top:24px}
-td,th{padding:10px 0;border-bottom:1px solid #d4e4f2;text-align:left;font-size:14px}
-.total{font-size:20px;font-weight:700;color:#2563a8}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px}
-</style></head><body>
-<p class="muted">${inv.type === "credit_note" ? "FACTURA ABONO" : "FACTURA"}</p>
-<h1>${escapeHtml(inv.id)}</h1>
-<p class="muted">${new Date(inv.createdAt).toLocaleString("es-ES")}</p>
-<div class="grid">
-<div><p class="muted">Emisor</p><p><strong>${escapeHtml(company.name)}</strong><br>${escapeHtml(company.address)}<br>${escapeHtml(company.taxId)}</p></div>
-<div><p class="muted">Cliente</p><p><strong>${escapeHtml(inv.customer.name)}</strong><br>${escapeHtml(inv.customer.email)}${inv.customer.phone ? `<br>${escapeHtml(inv.customer.phone)}` : ""}${inv.customer.taxId ? `<br>NIF: ${escapeHtml(inv.customer.taxId)}` : ""}</p></div>
-</div>
-<table><thead><tr><th>Concepto</th><th style="text-align:right">Importe</th></tr></thead><tbody>
-${inv.lines
-  .map(
-    (l) =>
-      `<tr><td>${l.qty}× ${escapeHtml(l.description)}</td><td style="text-align:right">${l.total.toFixed(2)} €</td></tr>`
-  )
-  .join("")}
-</tbody></table>
-<p style="margin-top:20px">Base: ${inv.subtotal.toFixed(2)} € · IVA (${inv.taxRate}%): ${inv.taxAmount.toFixed(2)} €</p>
-<p class="total">Total: ${inv.total.toFixed(2)} €</p>
-${inv.notes ? `<p class="muted">${escapeHtml(inv.notes)}</p>` : ""}
-<p class="muted">Reserva ${escapeHtml(inv.bookingId)}${inv.relatedInvoiceId ? ` · Relacionada: ${escapeHtml(inv.relatedInvoiceId)}` : ""}</p>
-</body></html>`;
-}
+import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
+import { inDateRange } from "@/lib/date-range";
+import {
+  InvoicePreviewModal,
+  openInvoicePreviewWindow,
+  type InvoiceCompany,
+} from "@/components/admin/InvoiceDocument";
 
 export function FacturasClient() {
   const searchParams = useSearchParams();
@@ -62,23 +26,38 @@ export function FacturasClient() {
     net: 0,
   });
   const [selected, setSelected] = useState<Invoice | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | "invoice" | "credit_note">(
     "all"
   );
-  const [company, setCompany] = useState({
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [company, setCompany] = useState<InvoiceCompany>({
     name: "Lanzarote Travels S.L.",
     taxId: "",
     address: "",
   });
+  const [bookingPayments, setBookingPayments] = useState<
+    Record<string, string>
+  >({});
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/invoices");
-    const data = await res.json();
+    const [invRes, bookRes] = await Promise.all([
+      fetch("/api/invoices"),
+      fetch("/api/bookings"),
+    ]);
+    const data = await invRes.json();
+    const books = await bookRes.json();
     setInvoices(data.invoices || []);
     if (data.stats) setStats(data.stats);
+    const map: Record<string, string> = {};
+    for (const b of books.bookings || []) {
+      map[b.id] = b.paymentMethod;
+    }
+    setBookingPayments(map);
     setLoading(false);
   }, []);
 
@@ -99,6 +78,9 @@ export function FacturasClient() {
           taxId: d.settings.companyTaxId || "",
           address:
             d.settings.companyAddress || d.settings.contactAddress || "",
+          phone: d.settings.phone,
+          email: d.settings.email,
+          agencyId: d.settings.companyAgencyId,
         });
       })
       .catch(() => undefined);
@@ -114,6 +96,7 @@ export function FacturasClient() {
     const q = query.trim().toLowerCase();
     return invoices.filter((inv) => {
       if (typeFilter !== "all" && inv.type !== typeFilter) return false;
+      if (!inDateRange(inv.createdAt, from, to)) return false;
       if (!q) return true;
       return (
         inv.id.toLowerCase().includes(q) ||
@@ -122,19 +105,14 @@ export function FacturasClient() {
         inv.customer.email.toLowerCase().includes(q)
       );
     });
-  }, [invoices, query, typeFilter]);
+  }, [invoices, query, typeFilter, from, to]);
 
-  function downloadSelected() {
-    if (!selected) return;
-    const html = buildInvoiceHtml(selected, company);
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${selected.id}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+  const extras = selected
+    ? {
+        paymentMethod: bookingPayments[selected.bookingId],
+        bookingId: selected.bookingId,
+      }
+    : undefined;
 
   return (
     <div className="space-y-6">
@@ -142,7 +120,7 @@ export function FacturasClient() {
         <div>
           <h1 className="text-3xl font-bold text-ink">Facturas</h1>
           <p className="mt-1 text-sm text-ink-muted">
-            Consulte, descargue e imprima facturas y abonos
+            Consulte, previsualice, imprima y descargue PDF de facturas y abonos
           </p>
         </div>
       </div>
@@ -182,6 +160,24 @@ export function FacturasClient() {
           <option value="invoice">Facturas</option>
           <option value="credit_note">Abonos</option>
         </select>
+      </div>
+
+      <div className="admin-print-hide">
+        <DateRangeFilter
+          title="Calendario de facturación"
+          hint="Filtre facturas por fecha de emisión"
+          from={from}
+          to={to}
+          onFrom={setFrom}
+          onTo={setTo}
+          onClear={() => {
+            setFrom("");
+            setTo("");
+          }}
+          showFieldSelect={false}
+          defaultPreset="none"
+          resultCount={filtered.length}
+        />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
@@ -260,34 +256,58 @@ export function FacturasClient() {
         <aside className="invoice-print-sheet h-fit rounded-lg bg-white p-5 ring-1 ring-sand-line">
           {selected ? (
             <div>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-bold tracking-wide text-ocean uppercase">
-                    {selected.type === "credit_note"
-                      ? "Factura abono"
-                      : "Factura"}
-                  </p>
-                  <p className="text-xl font-bold">{selected.id}</p>
-                  <p className="mt-1 text-xs text-ink-muted">
-                    {new Date(selected.createdAt).toLocaleString("es-ES")}
-                  </p>
-                </div>
-                <div className="flex gap-2 print:hidden">
+              <div>
+                <p className="text-xs font-bold tracking-wide text-ocean uppercase">
+                  {selected.type === "credit_note"
+                    ? "Factura abono"
+                    : "Factura"}
+                </p>
+                <p className="text-xl font-bold">{selected.id}</p>
+                <p className="mt-1 text-xs text-ink-muted">
+                  {new Date(selected.createdAt).toLocaleString("es-ES")}
+                </p>
+              </div>
+
+              <div className="admin-print-hide mt-4 flex flex-col gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={downloadSelected}
-                    className="rounded bg-ocean px-3 py-1.5 text-xs font-bold text-white"
+                    onClick={() => setPreviewOpen(true)}
+                    className="rounded-md bg-ocean px-3 py-2 text-xs font-bold text-white"
                   >
-                    Descargar
+                    Previsualizar
                   </button>
                   <button
                     type="button"
-                    onClick={() => window.print()}
-                    className="rounded border border-sand-line px-3 py-1.5 text-xs font-bold text-ink"
+                    onClick={() =>
+                      openInvoicePreviewWindow(selected, company, extras, false)
+                    }
+                    className="rounded-md border border-sand-line px-3 py-2 text-xs font-bold text-ink"
                   >
-                    Imprimir
+                    Abrir preview
                   </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    openInvoicePreviewWindow(selected, company, extras, true)
+                  }
+                  className="rounded-md border border-sand-line px-3 py-2 text-xs font-bold text-ink"
+                >
+                  Imprimir
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    openInvoicePreviewWindow(selected, company, extras, true)
+                  }
+                  className="rounded-md bg-ocean px-3 py-2.5 text-sm font-bold text-white hover:bg-ocean-deep"
+                >
+                  Descargar PDF
+                </button>
+                <p className="text-[11px] text-ink-muted">
+                  En el diálogo de impresión, elija «Guardar como PDF».
+                </p>
               </div>
 
               <div className="mt-5 grid gap-4 border-t border-sand-line pt-4 text-sm sm:grid-cols-2">
@@ -303,11 +323,6 @@ export function FacturasClient() {
                   <p className="text-ink-muted">{selected.customer.email}</p>
                   {selected.customer.phone && (
                     <p className="text-ink-muted">{selected.customer.phone}</p>
-                  )}
-                  {selected.customer.taxId && (
-                    <p className="text-ink-muted">
-                      NIF: {selected.customer.taxId}
-                    </p>
                   )}
                 </div>
               </div>
@@ -330,7 +345,7 @@ export function FacturasClient() {
                   <dd>{formatPrice(selected.subtotal)}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt>IVA ({selected.taxRate}%)</dt>
+                  <dt>IVA / IGIC ({selected.taxRate}%)</dt>
                   <dd>{formatPrice(selected.taxAmount)}</dd>
                 </div>
                 <div className="flex justify-between text-base font-bold">
@@ -344,30 +359,32 @@ export function FacturasClient() {
                   </dd>
                 </div>
               </dl>
-              {selected.notes && (
-                <p className="mt-4 text-xs text-ink-muted">{selected.notes}</p>
-              )}
               <p className="mt-3 text-xs text-ink-muted">
                 Reserva{" "}
                 <Link
                   href={`/admin/reservas?id=${selected.bookingId}`}
-                  className="font-bold text-ocean hover:underline print:text-ink"
+                  className="font-bold text-ocean hover:underline"
                 >
                   {selected.bookingId}
                 </Link>
-                {selected.relatedInvoiceId
-                  ? ` · Relacionada: ${selected.relatedInvoiceId}`
-                  : ""}
               </p>
             </div>
           ) : (
             <p className="admin-print-hide text-sm text-ink-muted">
-              Seleccione una factura para ver el detalle, descargarla o
-              imprimirla.
+              Seleccione una factura para previsualizarla o descargar el PDF.
             </p>
           )}
         </aside>
       </div>
+
+      {previewOpen && selected && (
+        <InvoicePreviewModal
+          invoice={selected}
+          company={company}
+          extras={extras}
+          onClose={() => setPreviewOpen(false)}
+        />
+      )}
     </div>
   );
 }

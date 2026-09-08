@@ -29,6 +29,7 @@ const empty: SiteSettings = {
   companyLegalName: "",
   companyTaxId: "",
   companyAddress: "",
+  companyAgencyId: "",
   taxRate: 0,
 };
 
@@ -267,7 +268,15 @@ export default function AdminAjustesPage() {
               onChange={(e) => set("companyAddress", e.target.value)}
             />
           </Field>
-          <Field label="% IVA">
+          <Field label="Agencia Nº (licencia)">
+            <input
+              className={adminInput}
+              value={settings.companyAgencyId || ""}
+              onChange={(e) => set("companyAgencyId", e.target.value)}
+              placeholder="Ej. I-AV-0002407.1"
+            />
+          </Field>
+          <Field label="% IVA / IGIC">
             <input
               type="number"
               min={0}

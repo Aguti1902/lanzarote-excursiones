@@ -12,14 +12,18 @@ import type {
 } from "@/types";
 import { formatDate, formatPrice, paymentLabel } from "@/lib/format";
 import { adminInput, Field } from "@/components/admin/Field";
+import {
+  DateRangeFilter,
+  type DateField,
+} from "@/components/admin/DateRangeFilter";
+import { inDateRange, todayISO } from "@/lib/date-range";
 
-const statusOptions: { value: "all" | BookingStatus; label: string }[] = [
-  { value: "all", label: "Todos los estados" },
-  { value: "pending", label: "Pendientes" },
-  { value: "confirmed", label: "Confirmadas" },
-  { value: "completed", label: "Completadas" },
-  { value: "cancelled", label: "Canceladas" },
-];
+type StatusTab =
+  | "all"
+  | "current"
+  | "completed"
+  | "incomplete"
+  | "cancelled";
 
 export function AdminReservasClient() {
   const searchParams = useSearchParams();
@@ -32,9 +36,10 @@ export function AdminReservasClient() {
   const [showCreate, setShowCreate] = useState(false);
 
   const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<"all" | BookingStatus>("all");
+  const [tab, setTab] = useState<StatusTab>("all");
   const [destination, setDestination] = useState("all");
   const [payment, setPayment] = useState<"all" | "card" | "bizum">("all");
+  const [dateField, setDateField] = useState<DateField>("service");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
@@ -67,10 +72,42 @@ export function AdminReservasClient() {
     if (fresh) setSelected(fresh);
   }, [bookings, selected?.id]);
 
+  const today = todayISO();
+
+  const tabCounts = useMemo(() => {
+    const current = bookings.filter(
+      (b) =>
+        (b.status === "confirmed" || b.status === "pending") && b.date >= today
+    ).length;
+    return {
+      all: bookings.length,
+      current,
+      completed: bookings.filter((b) => b.status === "completed").length,
+      incomplete: bookings.filter((b) => b.status === "pending").length,
+      cancelled: bookings.filter((b) => b.status === "cancelled").length,
+    };
+  }, [bookings, today]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return bookings.filter((b) => {
-      if (status !== "all" && b.status !== status) return false;
+      if (tab === "current") {
+        if (
+          !(
+            (b.status === "confirmed" || b.status === "pending") &&
+            b.date >= today
+          )
+        ) {
+          return false;
+        }
+      } else if (tab === "completed" && b.status !== "completed") {
+        return false;
+      } else if (tab === "incomplete" && b.status !== "pending") {
+        return false;
+      } else if (tab === "cancelled" && b.status !== "cancelled") {
+        return false;
+      }
+
       if (payment !== "all" && b.paymentMethod !== payment) return false;
       if (
         destination !== "all" &&
@@ -78,8 +115,9 @@ export function AdminReservasClient() {
       ) {
         return false;
       }
-      if (dateFrom && b.date < dateFrom) return false;
-      if (dateTo && b.date > dateTo) return false;
+      const dateValue =
+        dateField === "service" ? b.date : (b.createdAt || "").slice(0, 10);
+      if (!inDateRange(dateValue, dateFrom, dateTo)) return false;
       if (!q) return true;
       const hay = [
         b.id,
@@ -97,7 +135,17 @@ export function AdminReservasClient() {
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [bookings, query, status, payment, destination, dateFrom, dateTo]);
+  }, [
+    bookings,
+    query,
+    tab,
+    payment,
+    destination,
+    dateFrom,
+    dateTo,
+    dateField,
+    today,
+  ]);
 
   async function setBookingStatus(id: string, next: BookingStatus) {
     setMessage("");
@@ -134,13 +182,30 @@ export function AdminReservasClient() {
     await load();
   }
 
+  const tabs: { id: StatusTab; label: string; count: number }[] = [
+    { id: "all", label: "Todos", count: tabCounts.all },
+    { id: "current", label: "Reservas actuales", count: tabCounts.current },
+    { id: "completed", label: "Realizadas", count: tabCounts.completed },
+    {
+      id: "incomplete",
+      label: "Reservas sin completar",
+      count: tabCounts.incomplete,
+    },
+    {
+      id: "cancelled",
+      label: "Reservas canceladas",
+      count: tabCounts.cancelled,
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-ink">Reservas</h1>
           <p className="mt-1 text-sm text-ink-muted">
-            Filtre, consulte el detalle, emita facturas y gestione estados
+            Pulse el localizador para ver todos los detalles · {bookings.length}{" "}
+            en total
           </p>
         </div>
         <button
@@ -159,26 +224,15 @@ export function AdminReservasClient() {
         </p>
       )}
 
-      <div className="grid gap-3 rounded-lg bg-white p-4 ring-1 ring-sand-line md:grid-cols-3 xl:grid-cols-6">
+      <div className="flex flex-wrap gap-3">
         <input
-          className={`${adminInput} md:col-span-2 xl:col-span-2`}
-          placeholder="Buscar ID, cliente, hotel, vuelo…"
+          className={`${adminInput} min-w-[220px] max-w-sm flex-1`}
+          placeholder="Buscar id, cliente, email…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         <select
-          className={adminInput}
-          value={status}
-          onChange={(e) => setStatus(e.target.value as "all" | BookingStatus)}
-        >
-          {statusOptions.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-        <select
-          className={adminInput}
+          className={`${adminInput} max-w-[200px]`}
           value={destination}
           onChange={(e) => setDestination(e.target.value)}
         >
@@ -190,7 +244,7 @@ export function AdminReservasClient() {
           ))}
         </select>
         <select
-          className={adminInput}
+          className={`${adminInput} max-w-[160px]`}
           value={payment}
           onChange={(e) =>
             setPayment(e.target.value as "all" | "card" | "bizum")
@@ -200,112 +254,177 @@ export function AdminReservasClient() {
           <option value="card">Tarjeta</option>
           <option value="bizum">Bizum</option>
         </select>
-        <div className="grid grid-cols-2 gap-2 md:col-span-3 xl:col-span-1">
-          <input
-            type="date"
-            className={adminInput}
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            title="Desde"
-          />
-          <input
-            type="date"
-            className={adminInput}
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            title="Hasta"
-          />
-        </div>
       </div>
 
-      <p className="text-xs text-ink-muted">
-        {filtered.length} de {bookings.length} reservas
-      </p>
+      <div className="flex flex-wrap gap-2 border-b border-sand-line pb-1">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            className={`rounded-t-md px-3 py-2 text-sm font-medium ${
+              tab === t.id
+                ? "bg-white text-ocean ring-1 ring-sand-line ring-b-white"
+                : "text-ink-muted hover:bg-sky-soft/60"
+            }`}
+          >
+            {t.label}{" "}
+            <span className="font-bold">{t.count}</span>
+          </button>
+        ))}
+      </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-        <div className="overflow-x-auto rounded-lg bg-white shadow-sm ring-1 ring-sand-line">
-          <table className="w-full min-w-[960px] text-left text-sm">
-            <thead className="border-b border-sand-line bg-sky-soft text-ink-muted">
+      <DateRangeFilter
+        title="Calendario de clientes"
+        hint={
+          dateField === "service"
+            ? "Rango según día del servicio"
+            : "Rango según día de la reserva"
+        }
+        from={dateFrom}
+        to={dateTo}
+        onFrom={setDateFrom}
+        onTo={setDateTo}
+        onClear={() => {
+          setDateFrom("");
+          setDateTo("");
+        }}
+        dateField={dateField}
+        onDateField={setDateField}
+        resultCount={filtered.length}
+        defaultPreset="none"
+      />
+
+      <div className="overflow-x-auto rounded-lg bg-white shadow-sm ring-1 ring-sand-line">
+        <table className="w-full min-w-[1000px] text-left text-sm">
+          <thead className="border-b border-sand-line bg-sky-soft text-ink-muted">
+            <tr>
+              <th className="px-4 py-3 font-medium">ID</th>
+              <th className="px-4 py-3 font-medium">Fecha servicio</th>
+              <th className="px-4 py-3 font-medium">Fecha reserva</th>
+              <th className="px-4 py-3 font-medium">Servicio / Cliente</th>
+              <th className="px-4 py-3 font-medium">Pago</th>
+              <th className="px-4 py-3 font-medium">Importes</th>
+              <th className="px-4 py-3 font-medium">Estado</th>
+              <th className="px-4 py-3 font-medium">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
               <tr>
-                <th className="px-4 py-3 font-medium">ID</th>
-                <th className="px-4 py-3 font-medium">Fecha</th>
-                <th className="px-4 py-3 font-medium">Servicio / Cliente</th>
-                <th className="px-4 py-3 font-medium">Pago</th>
-                <th className="px-4 py-3 font-medium">Importe</th>
-                <th className="px-4 py-3 font-medium">Estado</th>
+                <td colSpan={8} className="px-4 py-8 text-center text-ink-muted">
+                  Cargando…
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {loading && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-ink-muted">
-                    Cargando…
+            )}
+            {!loading && filtered.length === 0 && (
+              <tr>
+                <td colSpan={8} className="px-4 py-8 text-center text-ink-muted">
+                  No hay reservas con esos filtros
+                </td>
+              </tr>
+            )}
+            {!loading &&
+              filtered.map((b) => (
+                <tr
+                  key={b.id}
+                  className={`cursor-pointer border-b border-sand-line/70 align-top hover:bg-sky-soft/40 ${
+                    selected?.id === b.id ? "bg-ocean/5" : ""
+                  }`}
+                  onClick={() => setSelected(b)}
+                >
+                  <td className="px-4 py-3 font-bold text-ocean">{b.id}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {formatDate(b.date)}
                   </td>
-                </tr>
-              )}
-              {!loading && filtered.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-ink-muted">
-                    No hay reservas con esos filtros
+                  <td className="px-4 py-3 whitespace-nowrap text-xs text-ink-muted">
+                    {b.createdAt
+                      ? formatDate(b.createdAt.slice(0, 10))
+                      : "—"}
                   </td>
-                </tr>
-              )}
-              {!loading &&
-                filtered.map((b) => (
-                  <tr
-                    key={b.id}
-                    className={`cursor-pointer border-b border-sand-line/70 align-top hover:bg-sky-soft/40 ${
-                      selected?.id === b.id ? "bg-ocean/5" : ""
-                    }`}
-                    onClick={() => setSelected(b)}
-                  >
-                    <td className="px-4 py-3 font-bold text-ocean">{b.id}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {formatDate(b.date)}
-                    </td>
-                    <td className="max-w-[260px] px-4 py-3">
-                      <p className="font-medium">{b.tourTitle}</p>
-                      <p className="text-xs text-ink-muted">{b.customer.name}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p>{paymentLabel(b.paymentMethod)}</p>
-                      {b.invoiceId && (
-                        <Link
-                          href={`/admin/facturas?id=${b.invoiceId}`}
-                          className="text-xs font-bold text-ocean hover:underline"
-                          onClick={(e) => e.stopPropagation()}
+                  <td className="max-w-[260px] px-4 py-3">
+                    <p className="font-medium">{b.tourTitle}</p>
+                    <p className="text-xs text-ink-muted">{b.customer.name}</p>
+                    <p className="text-xs text-ink-muted">{b.customer.email}</p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <p>{paymentLabel(b.paymentMethod)}</p>
+                    <PaymentBadge status={b.paymentStatus} />
+                    {b.invoiceId && (
+                      <Link
+                        href={`/admin/facturas?id=${b.invoiceId}`}
+                        className="mt-1 block text-xs font-bold text-ocean hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {b.invoiceId}
+                      </Link>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-xs">
+                    <p>
+                      Total:{" "}
+                      <b>{formatPrice(b.amountTotal ?? b.totalPrice)}</b>
+                    </p>
+                    <p className="text-ink-muted">
+                      Tarjeta: {formatPrice(b.amountPaidCard || 0)}
+                    </p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={b.status} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col gap-1 text-xs font-bold text-ocean">
+                      <button
+                        type="button"
+                        className="text-left hover:underline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelected(b);
+                        }}
+                      >
+                        Detalles
+                      </button>
+                      {b.status !== "completed" &&
+                        b.status !== "cancelled" && (
+                          <button
+                            type="button"
+                            className="text-left hover:underline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setBookingStatus(b.id, "completed");
+                            }}
+                          >
+                            Completar
+                          </button>
+                        )}
+                      {b.status !== "cancelled" && (
+                        <button
+                          type="button"
+                          className="text-left text-red-600 hover:underline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setBookingStatus(b.id, "cancelled");
+                          }}
                         >
-                          {b.invoiceId}
-                        </Link>
+                          Cancelar
+                        </button>
                       )}
-                    </td>
-                    <td className="px-4 py-3 font-bold">
-                      {formatPrice(b.amountTotal ?? b.totalPrice)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={b.status} />
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
-
-        <aside className="h-fit rounded-lg bg-white p-5 ring-1 ring-sand-line">
-          {selected ? (
-            <BookingDetail
-              booking={selected}
-              onClose={() => setSelected(null)}
-              onStatus={setBookingStatus}
-              onInvoice={issueInvoice}
-            />
-          ) : (
-            <p className="text-sm text-ink-muted">
-              Seleccione una reserva para ver el detalle completo.
-            </p>
-          )}
-        </aside>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
       </div>
+
+      {selected && (
+        <BookingDetailModal
+          booking={selected}
+          onClose={() => setSelected(null)}
+          onStatus={setBookingStatus}
+          onInvoice={issueInvoice}
+        />
+      )}
 
       {showCreate && (
         <CreateBookingModal
@@ -322,7 +441,7 @@ export function AdminReservasClient() {
   );
 }
 
-function BookingDetail({
+function BookingDetailModal({
   booking,
   onClose,
   onStatus,
@@ -343,97 +462,151 @@ function BookingDetail({
           : "—";
 
   return (
-    <div>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-bold tracking-wide text-ocean uppercase">
-            Reserva
-          </p>
-          <p className="text-xl font-bold">{booking.id}</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
+      <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white p-6 shadow-2xl">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-bold text-ink">Detalles de reserva</h2>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <StatusBadge status={booking.status} />
+              <p className="text-sm font-bold text-ocean">
+                Localizador {booking.id}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded p-1 text-ink-muted hover:bg-sky-soft"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded p-1 text-ink-muted hover:bg-sky-soft"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
 
-      <dl className="mt-4 space-y-2 text-sm">
-        <Row label="Servicio" value={booking.tourTitle} />
-        <Row label="Fecha" value={formatDate(booking.date)} />
-        <Row label="Destino" value={booking.transfer?.destination || "—"} />
-        <Row label="Trayecto" value={directionLabel} />
-        <Row label="Pasajeros" value={String(booking.adults)} />
-        <Row label="Cliente" value={booking.customer.name} />
-        <Row label="Email" value={booking.customer.email} />
-        <Row label="Teléfono" value={booking.customer.phone || "—"} />
-        <Row label="Hotel" value={booking.customer.hotel || "—"} />
-        <Row label="Vuelo" value={booking.customer.flightNumber || "—"} />
-        <Row label="Pago" value={paymentLabel(booking.paymentMethod)} />
-        <Row
-          label="Total"
-          value={formatPrice(booking.amountTotal ?? booking.totalPrice)}
-        />
-        <Row label="Estado" value={booking.status} />
-        <div className="flex justify-between gap-3 border-t border-sand-line pt-2">
-          <dt className="text-ink-muted">Factura</dt>
-          <dd className="text-right font-medium">
-            {booking.invoiceId ? (
-              <Link
-                href={`/admin/facturas?id=${booking.invoiceId}`}
-                className="font-bold text-ocean hover:underline"
+        <div className="mt-4 flex flex-wrap gap-2">
+          {booking.invoiceId ? (
+            <Link
+              href={`/admin/facturas?id=${booking.invoiceId}`}
+              className="rounded-md border border-ocean px-3 py-1.5 text-xs font-bold text-ocean"
+            >
+              Factura {booking.invoiceId}
+            </Link>
+          ) : (
+            booking.status !== "cancelled" && (
+              <button
+                type="button"
+                onClick={() => onInvoice(booking.id)}
+                className="rounded-md bg-ocean px-3 py-1.5 text-xs font-bold text-white"
               >
-                Ver {booking.invoiceId}
-              </Link>
-            ) : (
-              "—"
-            )}
-          </dd>
+                Emitir factura
+              </button>
+            )
+          )}
+          {booking.status !== "cancelled" && (
+            <button
+              type="button"
+              onClick={() => onStatus(booking.id, "cancelled")}
+              className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-bold text-red-600"
+            >
+              Cancelar reserva
+            </button>
+          )}
+          {booking.status !== "completed" && booking.status !== "cancelled" && (
+            <button
+              type="button"
+              onClick={() => onStatus(booking.id, "completed")}
+              className="rounded-md border border-sand-line px-3 py-1.5 text-xs font-bold"
+            >
+              Completar
+            </button>
+          )}
+          {booking.status !== "confirmed" && booking.status !== "cancelled" && (
+            <button
+              type="button"
+              onClick={() => onStatus(booking.id, "confirmed")}
+              className="rounded-md border border-sand-line px-3 py-1.5 text-xs font-bold"
+            >
+              Confirmar
+            </button>
+          )}
         </div>
-        {booking.customer.notes && (
-          <Row label="Notas" value={booking.customer.notes} />
-        )}
-      </dl>
 
-      <div className="mt-5 flex flex-col gap-2 border-t border-sand-line pt-4">
-        {!booking.invoiceId && booking.status !== "cancelled" && (
-          <button
-            type="button"
-            onClick={() => onInvoice(booking.id)}
-            className="rounded-md bg-ocean px-3 py-2 text-xs font-bold text-white"
-          >
-            Emitir factura
-          </button>
-        )}
-        {booking.status !== "confirmed" && booking.status !== "cancelled" && (
-          <button
-            type="button"
-            onClick={() => onStatus(booking.id, "confirmed")}
-            className="rounded-md border border-sand-line px-3 py-2 text-xs font-bold"
-          >
-            Confirmar
-          </button>
-        )}
-        {booking.status !== "completed" && booking.status !== "cancelled" && (
-          <button
-            type="button"
-            onClick={() => onStatus(booking.id, "completed")}
-            className="rounded-md border border-sand-line px-3 py-2 text-xs font-bold text-success"
-          >
-            Completar
-          </button>
-        )}
-        {booking.status !== "cancelled" && (
-          <button
-            type="button"
-            onClick={() => onStatus(booking.id, "cancelled")}
-            className="rounded-md border border-red-200 px-3 py-2 text-xs font-bold text-red-600"
-          >
-            Cancelar (+ abono)
-          </button>
-        )}
+        <section className="mt-6">
+          <h3 className="text-xs font-bold tracking-wide text-ink-muted uppercase">
+            Detalles de la reserva
+          </h3>
+          <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+            <Row label="Localizador" value={booking.id} />
+            <Row
+              label="Fecha reserva"
+              value={
+                booking.createdAt
+                  ? formatDate(booking.createdAt.slice(0, 10))
+                  : "—"
+              }
+            />
+            <Row label="Fecha servicio" value={formatDate(booking.date)} />
+            <Row label="Estado" value={booking.status} />
+            <Row
+              label="Total"
+              value={formatPrice(booking.amountTotal ?? booking.totalPrice)}
+            />
+            <Row label="Pago" value={paymentLabel(booking.paymentMethod)} />
+            <Row
+              label="Pagado tarjeta"
+              value={formatPrice(booking.amountPaidCard || 0)}
+            />
+            <Row
+              label="Estado pago"
+              value={booking.paymentStatus === "paid" ? "PAGADO" : booking.paymentStatus}
+            />
+          </dl>
+        </section>
+
+        <section className="mt-6">
+          <h3 className="text-xs font-bold tracking-wide text-ink-muted uppercase">
+            Detalles del cliente
+          </h3>
+          <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+            <Row label="Nombre" value={booking.customer.name} />
+            <Row label="Email" value={booking.customer.email} />
+            <Row label="Teléfono" value={booking.customer.phone || "—"} />
+          </dl>
+        </section>
+
+        <section className="mt-6">
+          <h3 className="text-xs font-bold tracking-wide text-ink-muted uppercase">
+            Hotel y comentarios
+          </h3>
+          <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+            <Row label="Hotel" value={booking.customer.hotel || "—"} />
+            <Row
+              label="Número de vuelo"
+              value={booking.customer.flightNumber || "—"}
+            />
+            {booking.customer.notes && (
+              <div className="sm:col-span-2">
+                <Row label="Notas" value={booking.customer.notes} />
+              </div>
+            )}
+          </dl>
+        </section>
+
+        <section className="mt-6 rounded-lg bg-sky-soft/40 p-4 ring-1 ring-sand-line">
+          <h3 className="text-xs font-bold tracking-wide text-ink-muted uppercase">
+            Servicios contratados
+          </h3>
+          <p className="mt-2 font-bold text-ink">{booking.tourTitle}</p>
+          <ul className="mt-2 space-y-1 text-sm text-ink-muted">
+            <li>Tipo de traslado: {directionLabel}</li>
+            <li>Destino: {booking.transfer?.destination || "—"}</li>
+            <li>Personas: {booking.adults}</li>
+            <li>
+              Precio: {formatPrice(booking.amountTotal ?? booking.totalPrice)}
+            </li>
+            <li>Fecha de servicio: {formatDate(booking.date)}</li>
+          </ul>
+        </section>
       </div>
     </div>
   );
@@ -441,9 +614,9 @@ function BookingDetail({
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between gap-3">
+    <div className="flex justify-between gap-3 border-b border-sand-line/60 py-1.5">
       <dt className="text-ink-muted">{label}</dt>
-      <dd className="max-w-[60%] text-right font-medium">{value}</dd>
+      <dd className="max-w-[65%] text-right font-medium">{value}</dd>
     </div>
   );
 }
@@ -680,6 +853,21 @@ function StatusBadge({ status }: { status: BookingStatus }) {
       className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${styles[status]}`}
     >
       {labels[status]}
+    </span>
+  );
+}
+
+function PaymentBadge({ status }: { status: Booking["paymentStatus"] }) {
+  if (status === "paid") {
+    return (
+      <span className="mt-1 inline-block rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+        PAGADO
+      </span>
+    );
+  }
+  return (
+    <span className="mt-1 inline-block rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+      {status}
     </span>
   );
 }

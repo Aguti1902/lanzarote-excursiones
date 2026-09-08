@@ -1,7 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { formatPrice } from "@/lib/format";
+import {
+  DateRangeFilter,
+  type DateField,
+} from "@/components/admin/DateRangeFilter";
+import { defaultLast7Days } from "@/lib/date-range";
 
 type Stats = {
   totalBookings: number;
@@ -26,18 +31,31 @@ type InvoiceStats = {
 };
 
 export default function AdminEstadisticasPage() {
+  const initial = defaultLast7Days();
+  const [from, setFrom] = useState(initial.from);
+  const [to, setTo] = useState(initial.to);
+  const [dateField, setDateField] = useState<DateField>("booking");
   const [stats, setStats] = useState<Stats | null>(null);
+  const [resultCount, setResultCount] = useState(0);
   const [inv, setInv] = useState<InvoiceStats | null>(null);
 
-  useEffect(() => {
-    Promise.all([
-      fetch("/api/admin/stats").then((r) => r.json()),
+  const load = useCallback(async () => {
+    const qs = new URLSearchParams();
+    if (from) qs.set("from", from);
+    if (to) qs.set("to", to);
+    qs.set("field", dateField);
+    const [s, i] = await Promise.all([
+      fetch(`/api/admin/stats?${qs}`).then((r) => r.json()),
       fetch("/api/invoices").then((r) => r.json()),
-    ]).then(([s, i]) => {
-      setStats(s.stats);
-      setInv(i.stats);
-    });
-  }, []);
+    ]);
+    setStats(s.stats);
+    setResultCount(s.meta?.total ?? 0);
+    setInv(i.stats);
+  }, [from, to, dateField]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   if (!stats) {
     return <p className="text-ink-muted">Cargando estadísticas…</p>;
@@ -48,9 +66,31 @@ export default function AdminEstadisticasPage() {
       <div>
         <h1 className="text-3xl font-bold text-ink">Estadísticas</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Ingresos, pagos online y facturación de traslados
+          Ingresos, pagos online y facturación · últimos 7 días por defecto
         </p>
       </div>
+
+      <DateRangeFilter
+        title="Calendario de estadísticas"
+        hint={
+          dateField === "booking"
+            ? "Por defecto: últimos 7 días según día en que reservaron"
+            : "Rango según día del servicio"
+        }
+        from={from}
+        to={to}
+        onFrom={setFrom}
+        onTo={setTo}
+        onClear={() => {
+          const d = defaultLast7Days();
+          setFrom(d.from);
+          setTo(d.to);
+        }}
+        dateField={dateField}
+        onDateField={setDateField}
+        resultCount={resultCount}
+        defaultPreset="7d"
+      />
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
@@ -73,10 +113,10 @@ export default function AdminEstadisticasPage() {
 
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-lg bg-white p-5 ring-1 ring-sand-line">
-          <h2 className="text-lg font-bold">Reservas</h2>
+          <h2 className="text-lg font-bold">Por tipo de servicio</h2>
           <ul className="mt-4 space-y-2 text-sm">
             <li className="flex justify-between">
-              <span>Traslados activos</span>
+              <span>Traslados</span>
               <b>{stats.byType.transfer}</b>
             </li>
             <li className="flex justify-between border-t border-sand-line pt-2">
@@ -106,7 +146,7 @@ export default function AdminEstadisticasPage() {
           <h2 className="text-lg font-bold">Top destinos</h2>
           <ul className="mt-4 space-y-3 text-sm">
             {(stats.topDestinations || []).length === 0 && (
-              <li className="text-ink-muted">Sin datos aún</li>
+              <li className="text-ink-muted">Sin datos en este rango</li>
             )}
             {(stats.topDestinations || []).map((t) => (
               <li key={t.title} className="flex justify-between gap-3">
@@ -123,7 +163,7 @@ export default function AdminEstadisticasPage() {
           <h2 className="text-lg font-bold">Ingresos por mes</h2>
           <ul className="mt-4 space-y-2 text-sm">
             {(stats.byMonth || []).length === 0 && (
-              <li className="text-ink-muted">Sin datos aún</li>
+              <li className="text-ink-muted">Sin datos en este rango</li>
             )}
             {(stats.byMonth || []).map((m) => (
               <li key={m.month} className="flex justify-between">
@@ -138,6 +178,9 @@ export default function AdminEstadisticasPage() {
       {inv && (
         <section className="rounded-lg bg-white p-5 ring-1 ring-sand-line">
           <h2 className="text-lg font-bold">Facturación</h2>
+          <p className="mt-1 text-xs text-ink-muted">
+            Totales de facturas (no filtrados por el calendario de reservas)
+          </p>
           <div className="mt-4 grid gap-4 text-sm sm:grid-cols-4">
             <div>
               <p className="text-ink-muted">Facturas</p>

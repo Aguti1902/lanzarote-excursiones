@@ -38,6 +38,7 @@ export interface SiteSettings {
   companyLegalName?: string;
   companyTaxId?: string;
   companyAddress?: string;
+  companyAgencyId?: string;
   taxRate?: number;
 }
 
