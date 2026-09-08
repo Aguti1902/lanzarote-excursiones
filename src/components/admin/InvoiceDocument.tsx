@@ -122,12 +122,12 @@ export function buildInvoiceDocumentHtml(
   </table>
   <div class="totals">
     <div><span>Base imponible</span><span>${inv.subtotal.toFixed(2)} €</span></div>
-    <div><span>IVA / IGIC (${inv.taxRate}%)</span><span>${inv.taxAmount.toFixed(2)} €</span></div>
+    <div><span>IGIC (${inv.taxRate}%)</span><span>${inv.taxAmount.toFixed(2)} €</span></div>
     <div class="grand"><span>Total</span><span>${inv.total.toFixed(2)} €</span></div>
   </div>
   <div class="foot">
     <div>Documento fiscal emitido por ${escapeHtml(company.name)}.
-    ${inv.taxRate > 0 ? "<br/>Impuesto aplicado según normativa vigente." : ""}
+    <br/>IGIC Canarias aplicado según normativa vigente (precio con IGIC incluido).
     ${inv.notes ? `<br/>${escapeHtml(inv.notes)}` : ""}
     </div>
     <div style="text-align:right">${escapeHtml(company.name)}

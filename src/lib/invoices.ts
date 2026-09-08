@@ -3,6 +3,7 @@ import path from "path";
 import type { Booking, Invoice } from "@/types";
 import { getSettings } from "@/lib/content";
 import { updateBooking } from "@/lib/bookings";
+import { resolveIgicRate, splitInclusiveTax } from "@/lib/tax";
 
 const dataPath = path.join(process.cwd(), "src/data/invoices.json");
 
@@ -47,18 +48,17 @@ export async function createInvoiceForBooking(
   if (already) return already;
 
   const settings = await getSettings();
-  const taxRate = settings.taxRate ?? 0;
+  const taxRate = resolveIgicRate(settings.taxRate);
   const invoices = await getInvoices();
   const year = new Date().getFullYear();
   const number = nextNumber(invoices, year);
   const id = `FAC-${year}-${String(number).padStart(4, "0")}`;
 
   const amountTotal = booking.amountTotal ?? booking.totalPrice;
-  const subtotal =
-    taxRate > 0
-      ? Math.round((amountTotal / (1 + taxRate / 100)) * 100) / 100
-      : amountTotal;
-  const taxAmount = Math.round((amountTotal - subtotal) * 100) / 100;
+  const { subtotal, taxAmount, total } = splitInclusiveTax(
+    amountTotal,
+    taxRate
+  );
 
   const invoice: Invoice = {
     id,
@@ -83,7 +83,7 @@ export async function createInvoiceForBooking(
     subtotal,
     taxRate,
     taxAmount,
-    total: amountTotal,
+    total,
     notes: notes || undefined,
     status: "issued",
   };
@@ -115,7 +115,6 @@ export async function createCreditNoteForBooking(
         )
       : undefined);
 
-  // Si cancelan sin factura previa (pago online), emitirla antes del abono.
   if (!related) {
     const amount = booking.amountTotal ?? booking.totalPrice ?? 0;
     if (amount <= 0) return null;

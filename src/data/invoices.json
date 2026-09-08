@@ -14,13 +14,13 @@
       {
         "description": "Traslado Aeropuerto → Costa Teguise",
         "qty": 1,
-        "unitPrice": 40,
-        "total": 40
+        "unitPrice": 37.38,
+        "total": 37.38
       }
     ],
-    "subtotal": 40,
-    "taxRate": 0,
-    "taxAmount": 0,
+    "subtotal": 37.38,
+    "taxRate": 7,
+    "taxAmount": 2.62,
     "total": 40,
     "status": "issued"
   },
@@ -39,13 +39,13 @@
       {
         "description": "Traslado Ida y vuelta Aeropuerto ↔ Playa Blanca",
         "qty": 1,
-        "unitPrice": 100,
-        "total": 100
+        "unitPrice": 93.46,
+        "total": 93.46
       }
     ],
-    "subtotal": 100,
-    "taxRate": 0,
-    "taxAmount": 0,
+    "subtotal": 93.46,
+    "taxRate": 7,
+    "taxAmount": 6.54,
     "total": 100,
     "status": "issued"
   },
@@ -64,13 +64,13 @@
       {
         "description": "Traslado Puerto del Carmen → Aeropuerto",
         "qty": 1,
-        "unitPrice": 40,
-        "total": 40
+        "unitPrice": 37.38,
+        "total": 37.38
       }
     ],
-    "subtotal": 40,
-    "taxRate": 0,
-    "taxAmount": 0,
+    "subtotal": 37.38,
+    "taxRate": 7,
+    "taxAmount": 2.62,
     "total": 40,
     "status": "issued"
   }

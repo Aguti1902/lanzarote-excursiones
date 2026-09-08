@@ -361,11 +361,11 @@ export function FacturasClient() {
               </ul>
               <dl className="mt-4 space-y-1 border-t border-sand-line pt-3 text-sm">
                 <div className="flex justify-between">
-                  <dt>Base</dt>
+                  <dt>Base imponible</dt>
                   <dd>{formatPrice(selected.subtotal)}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt>IVA / IGIC ({selected.taxRate}%)</dt>
+                  <dt>IGIC ({selected.taxRate}%)</dt>
                   <dd>{formatPrice(selected.taxAmount)}</dd>
                 </div>
                 <div className="flex justify-between text-base font-bold">

@@ -136,7 +136,7 @@ const defaultSettings: SiteSettings = {
   companyLegalName: "Lanzarote Travels S.L.",
   companyTaxId: "",
   companyAddress: "Lanzarote, Islas Canarias",
-  taxRate: 0,
+  taxRate: 7,
 };
 
 export async function getSettings(): Promise<SiteSettings> {

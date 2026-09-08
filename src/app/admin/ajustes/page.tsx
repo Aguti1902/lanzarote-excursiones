@@ -48,7 +48,7 @@ const empty: SiteSettings = {
   companyTaxId: "",
   companyAddress: "",
   companyAgencyId: "",
-  taxRate: 0,
+  taxRate: 7,
 };
 
 export default function AdminAjustesPage() {
@@ -426,16 +426,21 @@ export default function AdminAjustesPage() {
               placeholder="Ej. I-AV-0002407.1"
             />
           </Field>
-          <Field label="% IVA / IGIC">
+          <Field label="% IGIC (Canarias)">
             <input
               type="number"
               min={0}
               max={30}
+              step={0.1}
               className={adminInput}
-              value={settings.taxRate ?? 0}
+              value={settings.taxRate ?? 7}
               onChange={(e) => set("taxRate", Number(e.target.value))}
             />
           </Field>
+          <p className="md:col-span-2 text-xs text-ink-muted">
+            Los precios de reserva se entienden con IGIC incluido. En la factura
+            se desglosa base imponible + IGIC (por defecto 7%).
+          </p>
         </section>
 
         <button
