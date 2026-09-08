@@ -51,11 +51,14 @@ export async function addBooking(
 ): Promise<Booking> {
   const bookings = await getBookings();
   const id = `BK-${1000 + bookings.length + 1}`;
-  const split = splitPaymentAmounts(booking.totalPrice, booking.paymentMethod);
+  const method =
+    booking.paymentMethod === "bizum" ? "bizum" : "card";
+  const split = splitPaymentAmounts(booking.totalPrice, method);
   const created: Booking = {
     ...booking,
+    paymentMethod: method,
     ...split,
-    amountPaidCash: booking.amountPaidCash ?? 0,
+    amountPaidCash: 0,
     id,
     createdAt: new Date().toISOString(),
     status: booking.status ?? "confirmed",
@@ -133,8 +136,6 @@ export function getStats(bookings: Booking[]) {
   const byPayment = {
     card: active.filter((b) => b.paymentMethod === "card").length,
     bizum: active.filter((b) => b.paymentMethod === "bizum").length,
-    pay_on_day: active.filter((b) => b.paymentMethod === "pay_on_day").length,
-    deposit_10: active.filter((b) => b.paymentMethod === "deposit_10").length,
   };
   const upcoming = active
     .filter((b) => b.date >= new Date().toISOString().slice(0, 10))

@@ -16,10 +16,8 @@ export function formatDate(iso: string): string {
 
 export function paymentLabel(method: string): string {
   const map: Record<string, string> = {
-    card: "Tarjeta",
-    bizum: "Bizum",
-    pay_on_day: "Pago el día del traslado",
-    deposit_10: "10% tarjeta + resto efectivo",
+    card: "Tarjeta (100%)",
+    bizum: "Bizum (100%)",
   };
   return map[method] ?? method;
 }

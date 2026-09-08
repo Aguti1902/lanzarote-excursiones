@@ -47,7 +47,7 @@ export function TransferBookingForm({
     e.preventDefault();
     setError("");
     if (!date || !name || !email || !phone || !hotel) {
-      setError("Completa todos los campos obligatorios.");
+      setError("Complete los campos obligatorios.");
       return;
     }
     setLoading(true);
@@ -69,7 +69,8 @@ export function TransferBookingForm({
           adults,
           children: 0,
           totalPrice: total,
-          paymentMethod,
+          paymentMethod:
+            paymentMethod === "bizum" ? ("bizum" as const) : ("card" as const),
           customer: { name, email, phone, hotel, flightNumber },
           transfer: { destination: dest.name, direction },
         }),
@@ -91,12 +92,12 @@ export function TransferBookingForm({
     >
       <h3 className="font-display text-2xl text-ink">Reservar traslado</h3>
       <p className="mt-1 text-sm text-ink-muted">
-        Precio por vehículo (hasta 8 pasajeros). El chófer te espera en llegadas.
+        Privado · recibimiento con cartel con su nombre
       </p>
 
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         <label className="block md:col-span-2">
-          <span className="mb-1 block text-sm font-medium">Destino</span>
+          <span className="mb-1 block text-sm font-medium">Destino *</span>
           <select
             className={inputClass}
             value={destination}
@@ -111,7 +112,7 @@ export function TransferBookingForm({
         </label>
 
         <label className="block md:col-span-2">
-          <span className="mb-1 block text-sm font-medium">Trayecto</span>
+          <span className="mb-1 block text-sm font-medium">Trayecto *</span>
           <select
             className={inputClass}
             value={direction}
@@ -124,14 +125,14 @@ export function TransferBookingForm({
               )
             }
           >
-            <option value="airport_to_hotel">Aeropuerto → Hotel</option>
-            <option value="hotel_to_airport">Hotel → Aeropuerto</option>
-            <option value="return">Ida y vuelta</option>
+            <option value="airport_to_hotel">Aeropuerto al hotel</option>
+            <option value="hotel_to_airport">Hotel al aeropuerto</option>
+            <option value="return">Ida y Vuelta</option>
           </select>
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-sm font-medium">Fecha</span>
+          <span className="mb-1 block text-sm font-medium">Fecha *</span>
           <input
             type="date"
             className={inputClass}
@@ -153,7 +154,9 @@ export function TransferBookingForm({
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-sm font-medium">Nombre</span>
+          <span className="mb-1 block text-sm font-medium">
+            Nombre completo *
+          </span>
           <input
             className={inputClass}
             value={name}
@@ -191,7 +194,7 @@ export function TransferBookingForm({
         </label>
         <label className="block md:col-span-2">
           <span className="mb-1 block text-sm font-medium">
-            Hotel / dirección de recogida
+            Hotel / dirección *
           </span>
           <input
             className={inputClass}
@@ -201,7 +204,7 @@ export function TransferBookingForm({
           />
         </label>
         <label className="block md:col-span-2">
-          <span className="mb-1 block text-sm font-medium">Forma de pago</span>
+          <span className="mb-1 block text-sm font-medium">Pago</span>
           <select
             className={inputClass}
             value={paymentMethod}
@@ -209,10 +212,8 @@ export function TransferBookingForm({
               setPaymentMethod(e.target.value as PaymentMethod)
             }
           >
-            <option value="card">Tarjeta</option>
-            <option value="bizum">Bizum</option>
-            <option value="deposit_10">10% tarjeta + resto en efectivo</option>
-            <option value="pay_on_day">Pago el día del traslado</option>
+            <option value="card">Tarjeta (100%)</option>
+            <option value="bizum">Bizum (100%)</option>
           </select>
         </label>
       </div>
@@ -221,19 +222,14 @@ export function TransferBookingForm({
         <div>
           <p className="text-sm text-ink-muted">Total</p>
           <p className="text-3xl font-bold">{formatPrice(total)}</p>
-          {paymentMethod === "deposit_10" && (
-            <p className="mt-1 text-xs text-ink-muted">
-              Ahora {formatPrice(Math.round(total * 0.1 * 100) / 100)} · En
-              efectivo {formatPrice(Math.round(total * 0.9 * 100) / 100)}
-            </p>
-          )}
+          <p className="mt-1 text-xs text-ink-muted">por vehículo</p>
         </div>
         <button
           type="submit"
           disabled={loading}
           className="rounded-md bg-ocean px-8 py-3 font-semibold text-white hover:bg-ocean-deep disabled:opacity-60"
         >
-          {loading ? "Procesando…" : "Confirmar reserva"}
+          {loading ? "Procesando…" : "Confirmar traslado"}
         </button>
       </div>
       {error && <p className="mt-3 text-sm text-coral">{error}</p>}

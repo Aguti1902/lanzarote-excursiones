@@ -118,11 +118,15 @@ const defaultSettings: SiteSettings = {
   aboutValues: "",
   aboutPromise: "",
   transferIntro:
-    "Disfruta más de la isla y menos del aeropuerto. Nuestro chófer te espera en la terminal de llegadas.",
+    "Disfrute más de la isla y menos del aeropuerto, reservando un traslado privado a su hotel. Nuestro chófer le esperará en la terminal de llegadas.",
   transferHeroImage: "/images/heroes/transfer.jpg",
+  contactAddress: "Lanzarote, Islas Canarias",
+  seoTitle: "Lanzarote Travels - Traslados privados aeropuerto Lanzarote",
+  seoDescription:
+    "Traslados privados desde y hacia el aeropuerto de Lanzarote. Recogida en terminal con cartel, seguimiento de vuelos y tarifa fija por vehículo.",
   companyLegalName: "Lanzarote Travels S.L.",
   companyTaxId: "",
-  companyAddress: "",
+  companyAddress: "Lanzarote, Islas Canarias",
   taxRate: 0,
 };
 

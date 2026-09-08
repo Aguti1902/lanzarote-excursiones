@@ -7,16 +7,11 @@ type Stats = {
   totalBookings: number;
   revenue: number;
   cardCollected: number;
-  cashCollected: number;
-  cashPendingAmount: number;
-  cashPendingCount: number;
   cancelled: number;
   byType: { transfer: number };
   byPayment: {
     card: number;
     bizum: number;
-    pay_on_day: number;
-    deposit_10: number;
   };
   topDestinations: { title: string; count: number; revenue: number }[];
   byMonth: { month: string; amount: number }[];
@@ -53,25 +48,18 @@ export default function AdminEstadisticasPage() {
       <div>
         <h1 className="text-3xl font-bold text-ink">Estadísticas</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Ingresos, pagos, efectivo y facturación de traslados
+          Ingresos, pagos online y facturación de traslados
         </p>
       </div>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
           { label: "Ingresos cobrados", value: formatPrice(stats.revenue) },
           {
-            label: "Tarjeta / online",
+            label: "Cobrado online",
             value: formatPrice(stats.cardCollected || 0),
           },
-          {
-            label: "Efectivo cobrado",
-            value: formatPrice(stats.cashCollected || 0),
-          },
-          {
-            label: "Efectivo pendiente",
-            value: formatPrice(stats.cashPendingAmount || 0),
-          },
+          { label: "Reservas activas", value: String(stats.totalBookings) },
         ].map((c) => (
           <div
             key={c.label}
@@ -102,24 +90,12 @@ export default function AdminEstadisticasPage() {
           <h2 className="text-lg font-bold">Por método de pago</h2>
           <ul className="mt-4 space-y-2 text-sm">
             <li className="flex justify-between">
-              <span>Tarjeta 100%</span>
+              <span>Tarjeta</span>
               <b>{stats.byPayment.card}</b>
             </li>
             <li className="flex justify-between">
               <span>Bizum</span>
               <b>{stats.byPayment.bizum}</b>
-            </li>
-            <li className="flex justify-between">
-              <span>10% + efectivo</span>
-              <b>{stats.byPayment.deposit_10 || 0}</b>
-            </li>
-            <li className="flex justify-between">
-              <span>Día del traslado</span>
-              <b>{stats.byPayment.pay_on_day}</b>
-            </li>
-            <li className="flex justify-between border-t border-sand-line pt-2">
-              <span>Clientes con efectivo pendiente</span>
-              <b>{stats.cashPendingCount || 0}</b>
             </li>
           </ul>
         </div>

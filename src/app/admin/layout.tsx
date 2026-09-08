@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  Banknote,
   BarChart3,
   Bus,
   CalendarDays,
@@ -18,7 +17,6 @@ import {
 const nav = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/reservas", label: "Reservas", icon: CalendarDays },
-  { href: "/admin/cobros-efectivo", label: "Cobros efectivo", icon: Banknote },
   { href: "/admin/facturas", label: "Facturas", icon: FileText },
   { href: "/admin/estadisticas", label: "Estadísticas", icon: BarChart3 },
   { href: "/admin/traslados", label: "Traslados", icon: Bus },

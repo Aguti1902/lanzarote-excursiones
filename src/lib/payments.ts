@@ -1,8 +1,12 @@
 import type { CashStatus, PaymentMethod, PaymentStatus } from "@/types";
 
+/**
+ * Traslados: solo pago online completo (tarjeta / Bizum).
+ * deposit_10 y pay_on_day no se tramitan en este proyecto.
+ */
 export function splitPaymentAmounts(
   total: number,
-  method: PaymentMethod
+  _method: PaymentMethod
 ): {
   amountTotal: number;
   amountPaidCard: number;
@@ -12,32 +16,6 @@ export function splitPaymentAmounts(
   cashStatus: CashStatus;
 } {
   const amountTotal = Math.round(total * 100) / 100;
-
-  if (method === "deposit_10") {
-    const amountPaidCard = Math.round(amountTotal * 0.1 * 100) / 100;
-    const amountDueCash = Math.round((amountTotal - amountPaidCard) * 100) / 100;
-    return {
-      amountTotal,
-      amountPaidCard,
-      amountDueCash,
-      amountPaidCash: 0,
-      paymentStatus: "partial",
-      cashStatus: "pending",
-    };
-  }
-
-  if (method === "pay_on_day") {
-    return {
-      amountTotal,
-      amountPaidCard: 0,
-      amountDueCash: amountTotal,
-      amountPaidCash: 0,
-      paymentStatus: "pay_on_day",
-      cashStatus: "pending",
-    };
-  }
-
-  // card / bizum — paid in full online
   return {
     amountTotal,
     amountPaidCard: amountTotal,
@@ -46,4 +24,10 @@ export function splitPaymentAmounts(
     paymentStatus: "paid",
     cashStatus: "none",
   };
+}
+
+export function normalizeTransferPaymentMethod(
+  method: PaymentMethod | string | undefined
+): "card" | "bizum" {
+  return method === "bizum" ? "bizum" : "card";
 }

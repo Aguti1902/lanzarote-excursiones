@@ -22,7 +22,7 @@ export function AIChat() {
     {
       role: "assistant",
       content:
-        "¡Hola! Soy el asistente de Lanzarote Travels. Pregúntame por destinos, precios o formas de pago de traslados.",
+        "¡Hola! Soy el asistente de Lanzarote Travels. Pregúntame por destinos, precios o formas de pago (tarjeta / Bizum).",
     },
   ]);
   const endRef = useRef<HTMLDivElement>(null);

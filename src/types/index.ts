@@ -32,6 +32,9 @@ export interface SiteSettings {
   aboutPromise: string;
   transferIntro: string;
   transferHeroImage: string;
+  contactAddress?: string;
+  seoTitle?: string;
+  seoDescription?: string;
   companyLegalName?: string;
   companyTaxId?: string;
   companyAddress?: string;

@@ -22,6 +22,9 @@ const empty: SiteSettings = {
   aboutPromise: "",
   transferIntro: "",
   transferHeroImage: "",
+  contactAddress: "",
+  seoTitle: "",
+  seoDescription: "",
   companyLegalName: "",
   companyTaxId: "",
   companyAddress: "",
@@ -71,7 +74,8 @@ export default function AdminAjustesPage() {
       <div>
         <h1 className="font-display text-3xl text-ink">Ajustes de la web</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Textos, imágenes y datos fiscales. Todo sincronizado con la web pública.
+          Textos, SEO, imágenes y datos fiscales. Todo sincronizado con la web
+          pública.
         </p>
       </div>
 
@@ -113,11 +117,36 @@ export default function AdminAjustesPage() {
               onChange={(e) => set("email", e.target.value)}
             />
           </Field>
-          <Field label="Horario" className="md:col-span-2">
+          <Field label="Horario">
             <input
               className={adminInput}
               value={settings.hours}
               onChange={(e) => set("hours", e.target.value)}
+            />
+          </Field>
+          <Field label="Dirección (contacto)">
+            <input
+              className={adminInput}
+              value={settings.contactAddress || ""}
+              onChange={(e) => set("contactAddress", e.target.value)}
+            />
+          </Field>
+        </section>
+
+        <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-sand-line">
+          <h2 className="font-display text-xl">SEO</h2>
+          <Field label="Título SEO (inicio)">
+            <input
+              className={adminInput}
+              value={settings.seoTitle || ""}
+              onChange={(e) => set("seoTitle", e.target.value)}
+            />
+          </Field>
+          <Field label="Meta description">
+            <textarea
+              className={adminTextarea}
+              value={settings.seoDescription || ""}
+              onChange={(e) => set("seoDescription", e.target.value)}
             />
           </Field>
         </section>

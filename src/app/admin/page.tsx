@@ -2,28 +2,17 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import {
-  Banknote,
-  Bus,
-  CalendarCheck,
-  FileText,
-  Percent,
-  TrendingUp,
-} from "lucide-react";
+import { Bus, CalendarCheck, FileText, TrendingUp } from "lucide-react";
 import type { Booking } from "@/types";
 import { formatDate, formatPrice, paymentLabel } from "@/lib/format";
 
 type Stats = {
   totalBookings: number;
   revenue: number;
-  cashPendingAmount: number;
-  cashPendingCount: number;
   cancelled: number;
   byPayment: {
     card: number;
     bizum: number;
-    pay_on_day: number;
-    deposit_10: number;
   };
   upcoming: Booking[];
   recent: Booking[];
@@ -63,15 +52,14 @@ export default function AdminDashboard() {
       icon: TrendingUp,
     },
     {
-      label: "Efectivo pendiente",
-      value: formatPrice(stats.cashPendingAmount || 0),
-      icon: Banknote,
-      href: "/admin/cobros-efectivo",
+      label: "Pagos tarjeta",
+      value: String(stats.byPayment?.card || 0),
+      icon: FileText,
     },
     {
-      label: "Depósitos 10%",
-      value: String(stats.byPayment?.deposit_10 || 0),
-      icon: Percent,
+      label: "Pagos Bizum",
+      value: String(stats.byPayment?.bizum || 0),
+      icon: Bus,
     },
   ];
 
@@ -85,31 +73,16 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map((c) => {
-          const inner = (
-            <>
-              <c.icon className="h-5 w-5 text-ocean" />
-              <p className="mt-3 text-xs text-ink-muted">{c.label}</p>
-              <p className="mt-1 text-2xl font-bold text-ink">{c.value}</p>
-            </>
-          );
-          return c.href ? (
-            <Link
-              key={c.label}
-              href={c.href}
-              className="rounded-lg bg-white p-5 ring-1 ring-sand-line transition hover:ring-ocean/40"
-            >
-              {inner}
-            </Link>
-          ) : (
-            <div
-              key={c.label}
-              className="rounded-lg bg-white p-5 ring-1 ring-sand-line"
-            >
-              {inner}
-            </div>
-          );
-        })}
+        {cards.map((c) => (
+          <div
+            key={c.label}
+            className="rounded-lg bg-white p-5 ring-1 ring-sand-line"
+          >
+            <c.icon className="h-5 w-5 text-ocean" />
+            <p className="mt-3 text-xs text-ink-muted">{c.label}</p>
+            <p className="mt-1 text-2xl font-bold text-ink">{c.value}</p>
+          </div>
+        ))}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -172,11 +145,6 @@ export default function AdminDashboard() {
                 </div>
                 <div className="text-right">
                   <p className="font-bold">{formatDate(b.date)}</p>
-                  {(b.amountDueCash ?? 0) > 0 && (
-                    <p className="text-xs text-ocean">
-                      Ef. {formatPrice(b.amountDueCash)}
-                    </p>
-                  )}
                 </div>
               </li>
             ))}

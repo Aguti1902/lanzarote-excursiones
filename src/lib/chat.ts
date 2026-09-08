@@ -22,7 +22,7 @@ Email: ${settings.email}
 Horario: ${settings.hours}
 
 Traslados privados aeropuerto ↔ hotel. Precio por vehículo (hasta 8 pasajeros).
-Pagos: tarjeta, Bizum, 10% online + resto en efectivo, o pago el día del traslado.
+Pagos: tarjeta (100%) o Bizum (100%) online. Sin cobro en efectivo.
 Reserva en /traslados · Consulta en /gestionar-reserva · Contacto en /contacto
 
 Destinos y tarifas:
@@ -59,7 +59,7 @@ function localAnswer(q: string, context: string): string | null {
   }
 
   if (/pago|bizum|tarjeta|efectivo|cobro|deposito|10%/.test(q)) {
-    return "Aceptamos tarjeta, Bizum, un 10% online con el resto en efectivo el día del traslado, o pago completo el día del servicio. Al reservar eliges la opción.";
+    return "Los traslados se pagan online al reservar: tarjeta (100%) o Bizum (100%). La factura se genera automáticamente.";
   }
 
   if (/cancel|reembol|anular/.test(q)) {

@@ -6,6 +6,7 @@ import { formatDate, formatPrice, paymentLabel } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Reserva confirmada",
+  description: "Confirmación de su traslado privado en Lanzarote Travels.",
 };
 
 type Props = { searchParams: Promise<{ id?: string }> };
@@ -19,11 +20,11 @@ export default async function ConfirmacionPage({ searchParams }: Props) {
     <div className="mx-auto flex max-w-lg flex-col items-center px-4 py-20 text-center md:px-6">
       <CheckCircle2 className="h-14 w-14 text-success" />
       <h1 className="mt-5 font-display text-3xl text-ink md:text-4xl">
-        ¡Traslado confirmado!
+        ¡Reserva recibida!
       </h1>
       <p className="mt-3 text-ink-muted">
-        Guarda tu localizador. Te contactaremos si necesitamos algún detalle del
-        vuelo o del hotel.
+        Le hemos enviado un email de confirmación. Nuestro equipo le contactará
+        si necesita algún detalle adicional.
       </p>
 
       {booking ? (
@@ -52,14 +53,6 @@ export default async function ConfirmacionPage({ searchParams }: Props) {
                 <dt className="text-ink-muted">Pagado online</dt>
                 <dd className="font-medium text-success">
                   {formatPrice(booking.amountPaidCard)}
-                </dd>
-              </div>
-            )}
-            {(booking.amountDueCash ?? 0) > 0 && (
-              <div className="flex justify-between gap-4">
-                <dt className="text-ink-muted">Pendiente en efectivo</dt>
-                <dd className="font-bold text-ocean">
-                  {formatPrice(booking.amountDueCash)}
                 </dd>
               </div>
             )}

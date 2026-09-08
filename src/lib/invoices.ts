@@ -84,11 +84,7 @@ export async function createInvoiceForBooking(
     taxRate,
     taxAmount,
     total: amountTotal,
-    notes:
-      notes ||
-      (booking.paymentMethod === "deposit_10"
-        ? `Depósito 10% tarjeta: ${booking.amountPaidCard}€. Pendiente efectivo: ${booking.amountDueCash}€.`
-        : undefined),
+    notes: notes || undefined,
     status: "issued",
   };
 

@@ -50,9 +50,13 @@ export function FacturasClient() {
       .then((d) => {
         if (!d.settings) return;
         setCompany({
-          name: d.settings.companyLegalName || d.settings.brandName,
+          name:
+            d.settings.companyLegalName ||
+            d.settings.brandName ||
+            "Lanzarote Travels S.L.",
           taxId: d.settings.companyTaxId || "",
-          address: d.settings.companyAddress || "",
+          address:
+            d.settings.companyAddress || d.settings.contactAddress || "",
         });
       })
       .catch(() => undefined);

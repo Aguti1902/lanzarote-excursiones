@@ -31,15 +31,6 @@ export default function AdminReservasPage() {
     await load();
   }
 
-  async function collectCash(id: string) {
-    await fetch("/api/bookings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, collectCash: true }),
-    });
-    await load();
-  }
-
   async function issueInvoice(bookingId: string) {
     await fetch("/api/invoices", {
       method: "POST",
@@ -58,7 +49,7 @@ export default function AdminReservasPage() {
         <div>
           <h1 className="text-3xl font-bold text-ink">Reservas</h1>
           <p className="mt-1 text-sm text-ink-muted">
-            Estados, facturas, cobro en efectivo y pagos mixtos
+            Estados, facturas y pagos online de traslados
           </p>
         </div>
         <select
@@ -75,14 +66,14 @@ export default function AdminReservasPage() {
       </div>
 
       <div className="overflow-x-auto rounded-lg bg-white shadow-sm ring-1 ring-sand-line">
-        <table className="w-full min-w-[1000px] text-left text-sm">
+        <table className="w-full min-w-[960px] text-left text-sm">
           <thead className="border-b border-sand-line bg-sky-soft text-ink-muted">
             <tr>
               <th className="px-4 py-3 font-medium">ID</th>
               <th className="px-4 py-3 font-medium">Fecha</th>
               <th className="px-4 py-3 font-medium">Servicio / Cliente</th>
               <th className="px-4 py-3 font-medium">Pago</th>
-              <th className="px-4 py-3 font-medium">Importes</th>
+              <th className="px-4 py-3 font-medium">Importe</th>
               <th className="px-4 py-3 font-medium">Estado</th>
               <th className="px-4 py-3 font-medium">Acciones</th>
             </tr>
@@ -97,15 +88,26 @@ export default function AdminReservasPage() {
             )}
             {!loading &&
               filtered.map((b) => (
-                <tr key={b.id} className="border-b border-sand-line/70 align-top">
+                <tr
+                  key={b.id}
+                  className="border-b border-sand-line/70 align-top"
+                >
                   <td className="px-4 py-3 font-bold text-ocean">{b.id}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     {formatDate(b.date)}
                   </td>
-                  <td className="px-4 py-3 max-w-[260px]">
+                  <td className="max-w-[260px] px-4 py-3">
                     <p className="font-medium">{b.tourTitle}</p>
                     <p className="text-xs text-ink-muted">{b.customer.name}</p>
                     <p className="text-xs text-ink-muted">{b.customer.email}</p>
+                    {b.transfer?.destination && (
+                      <p className="text-xs text-ink-muted">
+                        {b.transfer.destination}
+                        {b.customer.flightNumber
+                          ? ` · ${b.customer.flightNumber}`
+                          : ""}
+                      </p>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <p>{paymentLabel(b.paymentMethod)}</p>
@@ -120,35 +122,19 @@ export default function AdminReservasPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-xs whitespace-nowrap">
-                    <p>Total: <b>{formatPrice(b.amountTotal ?? b.totalPrice)}</b></p>
-                    <p className="text-success">
-                      Tarjeta: {formatPrice(b.amountPaidCard ?? 0)}
+                    <p>
+                      Total:{" "}
+                      <b>{formatPrice(b.amountTotal ?? b.totalPrice)}</b>
                     </p>
-                    {(b.amountDueCash ?? 0) > 0 && (
-                      <p className="font-bold text-ocean">
-                        Efectivo: {formatPrice(b.amountDueCash)}
-                      </p>
-                    )}
-                    {(b.amountPaidCash ?? 0) > 0 && (
-                      <p>Cobrado ef.: {formatPrice(b.amountPaidCash)}</p>
-                    )}
+                    <p className="text-success">
+                      Online: {formatPrice(b.amountPaidCard ?? 0)}
+                    </p>
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge status={b.status} />
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col gap-1">
-                      {(b.amountDueCash ?? 0) > 0 &&
-                        b.cashStatus === "pending" &&
-                        b.status !== "cancelled" && (
-                          <button
-                            type="button"
-                            onClick={() => collectCash(b.id)}
-                            className="text-left text-xs font-bold text-success hover:underline"
-                          >
-                            Cobrar efectivo
-                          </button>
-                        )}
                       {!b.invoiceId && b.status !== "cancelled" && (
                         <button
                           type="button"

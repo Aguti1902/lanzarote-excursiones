@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Traslados privados aeropuerto Lanzarote",
   description:
-    "Reserva tu traslado privado desde el aeropuerto de Lanzarote a Playa Blanca, Puerto del Carmen, Costa Teguise y más.",
+    "Traslados privados desde y hacia el aeropuerto de Lanzarote. Recogida en terminal con cartel, seguimiento de vuelos y tarifa fija por vehículo.",
 };
 
 export default async function HomePage() {

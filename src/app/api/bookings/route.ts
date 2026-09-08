@@ -2,14 +2,14 @@ import { NextResponse } from "next/server";
 import {
   addBooking,
   getBookings,
-  markCashCollected,
   updateBookingStatus,
 } from "@/lib/bookings";
 import {
   createCreditNoteForBooking,
   createInvoiceForBooking,
 } from "@/lib/invoices";
-import type { BookingStatus, PaymentMethod } from "@/types";
+import { normalizeTransferPaymentMethod } from "@/lib/payments";
+import type { BookingStatus } from "@/types";
 
 export async function GET() {
   const bookings = await getBookings();
@@ -40,14 +40,14 @@ export async function POST(request: Request) {
     }
 
     const booking = await addBooking({
-      type,
+      type: "transfer",
       tourId,
       tourTitle,
       date,
       adults: Number(adults) || 1,
       children: Number(children) || 0,
       totalPrice: Number(totalPrice) || 0,
-      paymentMethod: (paymentMethod as PaymentMethod) || "card",
+      paymentMethod: normalizeTransferPaymentMethod(paymentMethod),
       paymentStatus: "paid",
       customer,
       transfer,
@@ -68,24 +68,11 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { id, status, collectCash } = body as {
+    const { id, status } = body as {
       id: string;
       status?: BookingStatus;
-      collectCash?: boolean;
     };
-    if (!id) {
-      return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
-    }
-
-    if (collectCash) {
-      const booking = await markCashCollected(id);
-      if (!booking) {
-        return NextResponse.json({ error: "No encontrada" }, { status: 404 });
-      }
-      return NextResponse.json({ booking });
-    }
-
-    if (!status) {
+    if (!id || !status) {
       return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
     }
 
