@@ -58,7 +58,7 @@ export default function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-[#f3f4f6]">
-      <aside className="hidden w-64 shrink-0 flex-col bg-header text-white md:flex">
+      <aside className="admin-print-hide hidden w-64 shrink-0 flex-col bg-header text-white md:flex print:hidden">
         <div className="border-b border-white/10 px-5 py-5">
           <p className="font-display text-xl">Lanzarote Travels</p>
           <p className="mt-1 text-xs text-white/55">Panel de administración</p>
@@ -106,7 +106,7 @@ export default function AdminLayout({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between gap-3 border-b border-sand-line bg-white px-4 py-3 md:hidden">
+        <header className="admin-print-hide flex items-center justify-between gap-3 border-b border-sand-line bg-white px-4 py-3 md:hidden print:hidden">
           <p className="font-semibold text-ink">Panel LT</p>
           <button
             type="button"
@@ -116,7 +116,7 @@ export default function AdminLayout({
             Salir
           </button>
         </header>
-        <nav className="flex gap-1 overflow-x-auto border-b border-sand-line bg-white px-2 py-2 md:hidden">
+        <nav className="admin-print-hide flex gap-1 overflow-x-auto border-b border-sand-line bg-white px-2 py-2 md:hidden print:hidden">
           {nav.map((item) => (
             <Link
               key={item.href}

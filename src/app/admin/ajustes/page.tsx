@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { SiteSettings } from "@/types";
 import { Field, adminInput, adminTextarea } from "@/components/admin/Field";
+import { ImageField } from "@/components/admin/ImageField";
 
 const empty: SiteSettings = {
   brandName: "",
@@ -167,13 +168,11 @@ export default function AdminAjustesPage() {
               onChange={(e) => set("homeSubheadline", e.target.value)}
             />
           </Field>
-          <Field label="URL imagen hero inicio">
-            <input
-              className={adminInput}
-              value={settings.homeHeroImage}
-              onChange={(e) => set("homeHeroImage", e.target.value)}
-            />
-          </Field>
+          <ImageField
+            label="Imagen hero inicio"
+            value={settings.homeHeroImage}
+            onChange={(url) => set("homeHeroImage", url)}
+          />
         </section>
 
         <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-sand-line">
@@ -214,20 +213,16 @@ export default function AdminAjustesPage() {
             />
           </Field>
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="URL imagen principal">
-              <input
-                className={adminInput}
-                value={settings.aboutImage}
-                onChange={(e) => set("aboutImage", e.target.value)}
-              />
-            </Field>
-            <Field label="URL imagen secundaria">
-              <input
-                className={adminInput}
-                value={settings.aboutImageSecondary}
-                onChange={(e) => set("aboutImageSecondary", e.target.value)}
-              />
-            </Field>
+            <ImageField
+              label="Imagen principal"
+              value={settings.aboutImage}
+              onChange={(url) => set("aboutImage", url)}
+            />
+            <ImageField
+              label="Imagen secundaria"
+              value={settings.aboutImageSecondary}
+              onChange={(url) => set("aboutImageSecondary", url)}
+            />
           </div>
         </section>
 
@@ -240,13 +235,11 @@ export default function AdminAjustesPage() {
               onChange={(e) => set("transferIntro", e.target.value)}
             />
           </Field>
-          <Field label="URL imagen hero">
-            <input
-              className={adminInput}
-              value={settings.transferHeroImage}
-              onChange={(e) => set("transferHeroImage", e.target.value)}
-            />
-          </Field>
+          <ImageField
+            label="Imagen hero traslados"
+            value={settings.transferHeroImage}
+            onChange={(url) => set("transferHeroImage", url)}
+          />
         </section>
 
         <section className="grid gap-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-sand-line md:grid-cols-2">

@@ -117,3 +117,25 @@ h3,
 .sky-panel {
   background: linear-gradient(160deg, #ffffff 0%, #eef6fc 100%);
 }
+
+@media print {
+  body {
+    background: white !important;
+  }
+  .admin-print-hide,
+  aside,
+  header,
+  nav,
+  .print\:hidden {
+    display: none !important;
+  }
+  .invoice-print-sheet {
+    display: block !important;
+    position: static !important;
+    box-shadow: none !important;
+    border: none !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+}

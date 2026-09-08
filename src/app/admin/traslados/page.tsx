@@ -144,6 +144,14 @@ export default function AdminTrasladosPage() {
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
           </Field>
+          <Field label="Slug (URL)">
+            <input
+              className={adminInput}
+              value={form.slug}
+              onChange={(e) => setForm({ ...form, slug: e.target.value })}
+              placeholder="se genera solo si vacío al crear"
+            />
+          </Field>
           <Field label="Duración">
             <input
               className={adminInput}
