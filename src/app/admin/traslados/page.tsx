@@ -18,6 +18,7 @@ const emptyDest = (): TransferDestination => ({
   slug: "",
   priceOneWay: 0,
   priceReturn: 0,
+  priceExtraPerson: 10,
   duration: "30 min",
   distance: "",
 });
@@ -179,6 +180,19 @@ export default function AdminTrasladosPage() {
               }
             />
           </Field>
+          <Field label="Persona extra (€)">
+            <input
+              type="number"
+              className={adminInput}
+              value={form.priceExtraPerson ?? 10}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  priceExtraPerson: Number(e.target.value),
+                })
+              }
+            />
+          </Field>
           <Field label="Distancia" className="md:col-span-2">
             <input
               className={adminInput}
@@ -217,13 +231,14 @@ export default function AdminTrasladosPage() {
               <th className="px-4 py-3 font-medium">Distancia</th>
               <th className="px-4 py-3 font-medium">Ida</th>
               <th className="px-4 py-3 font-medium">Ida y vuelta</th>
+              <th className="px-4 py-3 font-medium">Extra</th>
               <th className="px-4 py-3 font-medium">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-ink-muted">
+                <td colSpan={7} className="px-4 py-8 text-center text-ink-muted">
                   Cargando…
                 </td>
               </tr>
@@ -242,6 +257,9 @@ export default function AdminTrasladosPage() {
                   </td>
                   <td className="px-4 py-3 font-semibold">
                     {formatPrice(d.priceReturn)}
+                  </td>
+                  <td className="px-4 py-3 font-semibold">
+                    {formatPrice(d.priceExtraPerson ?? 10)}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">

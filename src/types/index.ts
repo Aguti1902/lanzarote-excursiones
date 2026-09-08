@@ -11,6 +11,8 @@ export interface TransferDestination {
   slug: string;
   priceOneWay: number;
   priceReturn: number;
+  /** Suplemento por persona por encima del cupo incluido (p. ej. 4). */
+  priceExtraPerson?: number;
   duration: string;
   distance: string;
 }
