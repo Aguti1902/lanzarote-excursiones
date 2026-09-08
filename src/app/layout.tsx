@@ -17,11 +17,11 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   title: {
-    default: "Lanzarote Travels | Excursiones y traslados",
+    default: "Lanzarote Travels | Traslados privados",
     template: "%s | Lanzarote Travels",
   },
   description:
-    "Excursiones en grupo reducido y grupo grande, tours privados, minibus a disposición y traslados privados en Lanzarote. Ideal también para cruceristas.",
+    "Traslados privados aeropuerto ↔ hotel en Lanzarote. Chófer local, seguimiento de vuelos y precio cerrado por vehículo.",
 };
 
 export default function RootLayout({

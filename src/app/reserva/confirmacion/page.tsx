@@ -19,11 +19,11 @@ export default async function ConfirmacionPage({ searchParams }: Props) {
     <div className="mx-auto flex max-w-lg flex-col items-center px-4 py-20 text-center md:px-6">
       <CheckCircle2 className="h-14 w-14 text-success" />
       <h1 className="mt-5 font-display text-3xl text-ink md:text-4xl">
-        ¡Reserva recibida!
+        ¡Traslado confirmado!
       </h1>
       <p className="mt-3 text-ink-muted">
-        Te hemos enviado un email de confirmación. Nuestro equipo te contactará
-        si necesita algún detalle adicional.
+        Guarda tu localizador. Te contactaremos si necesitamos algún detalle del
+        vuelo o del hotel.
       </p>
 
       {booking ? (
@@ -47,10 +47,32 @@ export default async function ConfirmacionPage({ searchParams }: Props) {
                 {paymentLabel(booking.paymentMethod)}
               </dd>
             </div>
+            {(booking.amountPaidCard ?? 0) > 0 && (
+              <div className="flex justify-between gap-4">
+                <dt className="text-ink-muted">Pagado online</dt>
+                <dd className="font-medium text-success">
+                  {formatPrice(booking.amountPaidCard)}
+                </dd>
+              </div>
+            )}
+            {(booking.amountDueCash ?? 0) > 0 && (
+              <div className="flex justify-between gap-4">
+                <dt className="text-ink-muted">Pendiente en efectivo</dt>
+                <dd className="font-bold text-ocean">
+                  {formatPrice(booking.amountDueCash)}
+                </dd>
+              </div>
+            )}
+            {booking.invoiceId && (
+              <div className="flex justify-between gap-4">
+                <dt className="text-ink-muted">Factura</dt>
+                <dd className="font-medium">{booking.invoiceId}</dd>
+              </div>
+            )}
             <div className="flex justify-between gap-4 border-t border-sand-line pt-2">
               <dt className="text-ink-muted">Total</dt>
               <dd className="text-lg font-bold">
-                {formatPrice(booking.totalPrice)}
+                {formatPrice(booking.amountTotal ?? booking.totalPrice)}
               </dd>
             </div>
           </dl>
@@ -61,12 +83,20 @@ export default async function ConfirmacionPage({ searchParams }: Props) {
         </p>
       )}
 
-      <Link
-        href="/"
-        className="mt-8 rounded-md bg-ocean px-6 py-3 text-sm font-semibold text-white hover:bg-ocean-deep"
-      >
-        Volver al inicio
-      </Link>
+      <div className="mt-8 flex flex-wrap justify-center gap-3">
+        <Link
+          href="/gestionar-reserva"
+          className="rounded-md bg-ocean px-6 py-3 text-sm font-semibold text-white hover:bg-ocean-deep"
+        >
+          Gestionar reserva
+        </Link>
+        <Link
+          href="/"
+          className="rounded-md px-6 py-3 text-sm font-semibold text-ocean ring-1 ring-ocean/30 hover:bg-sky-soft"
+        >
+          Volver al inicio
+        </Link>
+      </div>
     </div>
   );
 }

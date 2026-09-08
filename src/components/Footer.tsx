@@ -9,7 +9,7 @@ export function Footer() {
   const [brand, setBrand] = useState("Lanzarote Travels");
   const [phone, setPhone] = useState("+34 600 000 000");
   const [email, setEmail] = useState("hola@lanzarotetravels.com");
-  const [hours, setHours] = useState("Lunes–Domingo · 8:00–20:00");
+  const [hours, setHours] = useState("Contacto 24 / 7");
   const [destinations, setDestinations] = useState<string[]>([
     "Playa Blanca",
     "Puerto Calero",
@@ -32,9 +32,7 @@ export function Footer() {
         }
         if (transfersData.destinations?.length) {
           setDestinations(
-            transfersData.destinations.map(
-              (d: { name: string }) => d.name
-            )
+            transfersData.destinations.map((d: { name: string }) => d.name)
           );
         }
       })
@@ -49,8 +47,8 @@ export function Footer() {
         <div>
           <p className="font-display text-2xl">{brand}</p>
           <p className="mt-3 text-sm leading-relaxed text-white/70">
-            Excursiones en grupo reducido y grupo grande, tours privados,
-            minibus a disposición y traslados privados desde el aeropuerto.
+            Traslados privados aeropuerto ↔ hotel en Lanzarote. Chófer local,
+            seguimiento de vuelos y precio cerrado por vehículo.
           </p>
         </div>
 
@@ -60,23 +58,23 @@ export function Footer() {
           </p>
           <ul className="mt-4 space-y-2 text-sm text-white/70">
             <li>
-              <Link href="/excursiones" className="hover:text-white">
-                Excursiones
-              </Link>
-            </li>
-            <li>
-              <Link href="/cruceristas" className="hover:text-white">
-                Para cruceristas
-              </Link>
-            </li>
-            <li>
               <Link href="/traslados" className="hover:text-white">
-                Traslados
+                Reservar traslado
               </Link>
             </li>
             <li>
-              <Link href="/blog" className="hover:text-white">
-                Blog
+              <Link href="/gestionar-reserva" className="hover:text-white">
+                Gestionar reserva
+              </Link>
+            </li>
+            <li>
+              <Link href="/sobre-nosotros" className="hover:text-white">
+                Sobre nosotros
+              </Link>
+            </li>
+            <li>
+              <Link href="/contacto" className="hover:text-white">
+                Contacto
               </Link>
             </li>
           </ul>
@@ -84,10 +82,10 @@ export function Footer() {
 
         <div>
           <p className="text-sm font-semibold tracking-wide text-white/90 uppercase">
-            Traslados aeropuerto
+            Destinos
           </p>
           <ul className="mt-4 space-y-2 text-sm text-white/70">
-            {destinations.map((d) => (
+            {destinations.slice(0, 8).map((d) => (
               <li key={d}>{d}</li>
             ))}
           </ul>

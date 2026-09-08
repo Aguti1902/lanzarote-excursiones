@@ -7,18 +7,17 @@ import { Menu, X, Phone } from "lucide-react";
 
 const links = [
   { href: "/", label: "Inicio" },
-  { href: "/excursiones", label: "Excursiones" },
-  { href: "/cruceristas", label: "Cruceristas" },
   { href: "/traslados", label: "Traslados" },
+  { href: "/gestionar-reserva", label: "Mi reserva" },
   { href: "/sobre-nosotros", label: "Sobre nosotros" },
-  { href: "/blog", label: "Blog" },
+  { href: "/contacto", label: "Contacto" },
 ];
 
 export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [brand, setBrand] = useState("Lanzarote Travels");
-  const [tagline, setTagline] = useState("Excursiones & traslados");
+  const [tagline, setTagline] = useState("Traslados privados");
   const [phone, setPhone] = useState("+34 600 000 000");
 
   useEffect(() => {
@@ -81,7 +80,7 @@ export function Header() {
             {phone}
           </a>
           <Link
-            href="/excursiones"
+            href="/traslados"
             className="rounded-md bg-ocean px-4 py-2 text-sm font-semibold text-white transition hover:bg-ocean-deep"
           >
             Reservar
@@ -112,7 +111,7 @@ export function Header() {
               </Link>
             ))}
             <Link
-              href="/excursiones"
+              href="/traslados"
               onClick={() => setOpen(false)}
               className="mt-2 rounded-md bg-ocean px-4 py-3 text-center font-semibold text-white"
             >

@@ -1,41 +1,8 @@
-export type GroupSize = "small" | "large";
-export type TourCategory = "excursion" | "private" | "minibus" | "transfer";
-export type PaymentMethod = "card" | "bizum" | "pay_on_day";
+export type PaymentMethod = "card" | "bizum" | "pay_on_day" | "deposit_10";
 export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
-export type BookingType = "tour" | "transfer" | "minibus";
-
-export interface Tour {
-  id: string;
-  slug: string;
-  title: string;
-  shortTitle: string;
-  category: TourCategory;
-  groupSize?: GroupSize;
-  duration: string;
-  durationHours: number;
-  priceAdult: number;
-  priceChild: number;
-  currency: string;
-  rating: number;
-  reviewCount: number;
-  image: string;
-  gallery: string[];
-  summary: string;
-  description: string;
-  highlights: string[];
-  places: string[];
-  included: string[];
-  notIncluded: string[];
-  recommendations: string[];
-  cancellationPolicy: string;
-  maxGroup?: number;
-  languages: string[];
-  allowPayOnDay: boolean;
-  allowCard: boolean;
-  allowBizum: boolean;
-  cruiseFriendly: boolean;
-  featured?: boolean;
-}
+export type BookingType = "transfer";
+export type PaymentStatus = "unpaid" | "paid" | "pay_on_day" | "partial";
+export type CashStatus = "pending" | "collected" | "waived" | "none";
 
 export interface TransferDestination {
   id: string;
@@ -45,17 +12,6 @@ export interface TransferDestination {
   priceReturn: number;
   duration: string;
   distance: string;
-}
-
-export interface BlogPost {
-  slug: string;
-  title: string;
-  excerpt: string;
-  content: string;
-  image: string;
-  date: string;
-  author: string;
-  tags: string[];
 }
 
 export interface SiteSettings {
@@ -74,17 +30,12 @@ export interface SiteSettings {
   aboutImageSecondary: string;
   aboutValues: string;
   aboutPromise: string;
-  excursionsTitle: string;
-  excursionsIntro: string;
-  excursionsHeroImage: string;
-  blogTitle: string;
-  blogIntro: string;
-  blogHeroImage: string;
-  cruiseHeadline: string;
-  cruiseIntro: string;
-  cruiseHeroImage: string;
   transferIntro: string;
   transferHeroImage: string;
+  companyLegalName?: string;
+  companyTaxId?: string;
+  companyAddress?: string;
+  taxRate?: number;
 }
 
 export interface TransfersData {
@@ -102,9 +53,15 @@ export interface Booking {
   adults: number;
   children: number;
   totalPrice: number;
+  amountTotal: number;
+  amountPaidCard: number;
+  amountDueCash: number;
+  amountPaidCash: number;
   paymentMethod: PaymentMethod;
-  paymentStatus: "unpaid" | "paid" | "pay_on_day";
+  paymentStatus: PaymentStatus;
+  cashStatus: CashStatus;
   status: BookingStatus;
+  invoiceId?: string;
   customer: {
     name: string;
     email: string;
@@ -113,12 +70,39 @@ export interface Booking {
     cruiseShip?: string;
     flightNumber?: string;
     notes?: string;
+    taxId?: string;
   };
   transfer?: {
     destination: string;
     direction: "airport_to_hotel" | "hotel_to_airport" | "return";
   };
-  minibus?: {
-    hours: number;
+}
+
+export interface InvoiceLine {
+  description: string;
+  qty: number;
+  unitPrice: number;
+  total: number;
+}
+
+export interface Invoice {
+  id: string;
+  number: number;
+  type: "invoice" | "credit_note";
+  bookingId: string;
+  createdAt: string;
+  customer: {
+    name: string;
+    email: string;
+    phone?: string;
+    taxId?: string;
   };
+  lines: InvoiceLine[];
+  subtotal: number;
+  taxRate: number;
+  taxAmount: number;
+  total: number;
+  relatedInvoiceId?: string;
+  notes?: string;
+  status: "issued" | "void";
 }

@@ -20,17 +20,12 @@ const empty: SiteSettings = {
   aboutImageSecondary: "",
   aboutValues: "",
   aboutPromise: "",
-  excursionsTitle: "",
-  excursionsIntro: "",
-  excursionsHeroImage: "",
-  blogTitle: "",
-  blogIntro: "",
-  blogHeroImage: "",
-  cruiseHeadline: "",
-  cruiseIntro: "",
-  cruiseHeroImage: "",
   transferIntro: "",
   transferHeroImage: "",
+  companyLegalName: "",
+  companyTaxId: "",
+  companyAddress: "",
+  taxRate: 0,
 };
 
 export default function AdminAjustesPage() {
@@ -76,8 +71,7 @@ export default function AdminAjustesPage() {
       <div>
         <h1 className="font-display text-3xl text-ink">Ajustes de la web</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Textos, imágenes de cabecera y datos de contacto. Todo sincronizado con
-          la web pública.
+          Textos, imágenes y datos fiscales. Todo sincronizado con la web pública.
         </p>
       </div>
 
@@ -91,108 +85,175 @@ export default function AdminAjustesPage() {
         <section className="grid gap-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-sand-line md:grid-cols-2">
           <h2 className="font-display text-xl md:col-span-2">Contacto y marca</h2>
           <Field label="Nombre de marca">
-            <input className={adminInput} value={settings.brandName} onChange={(e) => set("brandName", e.target.value)} />
+            <input
+              className={adminInput}
+              value={settings.brandName}
+              onChange={(e) => set("brandName", e.target.value)}
+            />
           </Field>
           <Field label="Eslogan corto">
-            <input className={adminInput} value={settings.tagline} onChange={(e) => set("tagline", e.target.value)} />
+            <input
+              className={adminInput}
+              value={settings.tagline}
+              onChange={(e) => set("tagline", e.target.value)}
+            />
           </Field>
           <Field label="Teléfono">
-            <input className={adminInput} value={settings.phone} onChange={(e) => set("phone", e.target.value)} />
+            <input
+              className={adminInput}
+              value={settings.phone}
+              onChange={(e) => set("phone", e.target.value)}
+            />
           </Field>
           <Field label="Email">
-            <input type="email" className={adminInput} value={settings.email} onChange={(e) => set("email", e.target.value)} />
+            <input
+              type="email"
+              className={adminInput}
+              value={settings.email}
+              onChange={(e) => set("email", e.target.value)}
+            />
           </Field>
           <Field label="Horario" className="md:col-span-2">
-            <input className={adminInput} value={settings.hours} onChange={(e) => set("hours", e.target.value)} />
+            <input
+              className={adminInput}
+              value={settings.hours}
+              onChange={(e) => set("hours", e.target.value)}
+            />
           </Field>
         </section>
 
         <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-sand-line">
           <h2 className="font-display text-xl">Inicio</h2>
           <Field label="Titular">
-            <input className={adminInput} value={settings.homeHeadline} onChange={(e) => set("homeHeadline", e.target.value)} />
+            <input
+              className={adminInput}
+              value={settings.homeHeadline}
+              onChange={(e) => set("homeHeadline", e.target.value)}
+            />
           </Field>
           <Field label="Subtítulo">
-            <textarea className={adminTextarea} value={settings.homeSubheadline} onChange={(e) => set("homeSubheadline", e.target.value)} />
+            <textarea
+              className={adminTextarea}
+              value={settings.homeSubheadline}
+              onChange={(e) => set("homeSubheadline", e.target.value)}
+            />
           </Field>
           <Field label="URL imagen hero inicio">
-            <input className={adminInput} value={settings.homeHeroImage} onChange={(e) => set("homeHeroImage", e.target.value)} />
+            <input
+              className={adminInput}
+              value={settings.homeHeroImage}
+              onChange={(e) => set("homeHeroImage", e.target.value)}
+            />
           </Field>
         </section>
 
         <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-sand-line">
           <h2 className="font-display text-xl">Sobre nosotros</h2>
           <Field label="Título">
-            <input className={adminInput} value={settings.aboutTitle} onChange={(e) => set("aboutTitle", e.target.value)} />
+            <input
+              className={adminInput}
+              value={settings.aboutTitle}
+              onChange={(e) => set("aboutTitle", e.target.value)}
+            />
           </Field>
           <Field label="Entradilla">
-            <textarea className={adminTextarea} value={settings.aboutLead} onChange={(e) => set("aboutLead", e.target.value)} />
+            <textarea
+              className={adminTextarea}
+              value={settings.aboutLead}
+              onChange={(e) => set("aboutLead", e.target.value)}
+            />
           </Field>
           <Field label="Texto completo (párrafos con línea en blanco)">
-            <textarea className={`${adminTextarea} min-h-[200px]`} value={settings.aboutText} onChange={(e) => set("aboutText", e.target.value)} />
+            <textarea
+              className={`${adminTextarea} min-h-[200px]`}
+              value={settings.aboutText}
+              onChange={(e) => set("aboutText", e.target.value)}
+            />
           </Field>
           <Field label="Valores (uno por línea)">
-            <textarea className={adminTextarea} value={settings.aboutValues} onChange={(e) => set("aboutValues", e.target.value)} />
+            <textarea
+              className={adminTextarea}
+              value={settings.aboutValues}
+              onChange={(e) => set("aboutValues", e.target.value)}
+            />
           </Field>
           <Field label="Promesa">
-            <textarea className={adminTextarea} value={settings.aboutPromise} onChange={(e) => set("aboutPromise", e.target.value)} />
+            <textarea
+              className={adminTextarea}
+              value={settings.aboutPromise}
+              onChange={(e) => set("aboutPromise", e.target.value)}
+            />
           </Field>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="URL imagen principal">
-              <input className={adminInput} value={settings.aboutImage} onChange={(e) => set("aboutImage", e.target.value)} />
+              <input
+                className={adminInput}
+                value={settings.aboutImage}
+                onChange={(e) => set("aboutImage", e.target.value)}
+              />
             </Field>
             <Field label="URL imagen secundaria">
-              <input className={adminInput} value={settings.aboutImageSecondary} onChange={(e) => set("aboutImageSecondary", e.target.value)} />
+              <input
+                className={adminInput}
+                value={settings.aboutImageSecondary}
+                onChange={(e) => set("aboutImageSecondary", e.target.value)}
+              />
             </Field>
           </div>
         </section>
 
         <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-sand-line">
-          <h2 className="font-display text-xl">Excursiones</h2>
-          <Field label="Título">
-            <input className={adminInput} value={settings.excursionsTitle} onChange={(e) => set("excursionsTitle", e.target.value)} />
-          </Field>
-          <Field label="Introducción">
-            <textarea className={adminTextarea} value={settings.excursionsIntro} onChange={(e) => set("excursionsIntro", e.target.value)} />
-          </Field>
-          <Field label="URL imagen hero">
-            <input className={adminInput} value={settings.excursionsHeroImage} onChange={(e) => set("excursionsHeroImage", e.target.value)} />
-          </Field>
-        </section>
-
-        <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-sand-line">
-          <h2 className="font-display text-xl">Blog</h2>
-          <Field label="Título">
-            <input className={adminInput} value={settings.blogTitle} onChange={(e) => set("blogTitle", e.target.value)} />
-          </Field>
-          <Field label="Introducción">
-            <textarea className={adminTextarea} value={settings.blogIntro} onChange={(e) => set("blogIntro", e.target.value)} />
-          </Field>
-          <Field label="URL imagen hero">
-            <input className={adminInput} value={settings.blogHeroImage} onChange={(e) => set("blogHeroImage", e.target.value)} />
-          </Field>
-        </section>
-
-        <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-sand-line">
-          <h2 className="font-display text-xl">Cruceristas</h2>
-          <Field label="Titular de bienvenida">
-            <input className={adminInput} value={settings.cruiseHeadline} onChange={(e) => set("cruiseHeadline", e.target.value)} />
-          </Field>
-          <Field label="Texto de bienvenida">
-            <textarea className={adminTextarea} value={settings.cruiseIntro} onChange={(e) => set("cruiseIntro", e.target.value)} />
-          </Field>
-          <Field label="URL imagen hero">
-            <input className={adminInput} value={settings.cruiseHeroImage} onChange={(e) => set("cruiseHeroImage", e.target.value)} />
-          </Field>
-        </section>
-
-        <section className="space-y-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-sand-line">
           <h2 className="font-display text-xl">Traslados</h2>
           <Field label="Texto introductorio">
-            <textarea className={adminTextarea} value={settings.transferIntro} onChange={(e) => set("transferIntro", e.target.value)} />
+            <textarea
+              className={adminTextarea}
+              value={settings.transferIntro}
+              onChange={(e) => set("transferIntro", e.target.value)}
+            />
           </Field>
           <Field label="URL imagen hero">
-            <input className={adminInput} value={settings.transferHeroImage} onChange={(e) => set("transferHeroImage", e.target.value)} />
+            <input
+              className={adminInput}
+              value={settings.transferHeroImage}
+              onChange={(e) => set("transferHeroImage", e.target.value)}
+            />
+          </Field>
+        </section>
+
+        <section className="grid gap-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-sand-line md:grid-cols-2">
+          <h2 className="font-display text-xl md:col-span-2">
+            Datos fiscales (facturas)
+          </h2>
+          <Field label="Razón social">
+            <input
+              className={adminInput}
+              value={settings.companyLegalName || ""}
+              onChange={(e) => set("companyLegalName", e.target.value)}
+            />
+          </Field>
+          <Field label="NIF / CIF">
+            <input
+              className={adminInput}
+              value={settings.companyTaxId || ""}
+              onChange={(e) => set("companyTaxId", e.target.value)}
+            />
+          </Field>
+          <Field label="Dirección fiscal" className="md:col-span-2">
+            <input
+              className={adminInput}
+              value={settings.companyAddress || ""}
+              onChange={(e) => set("companyAddress", e.target.value)}
+            />
+          </Field>
+          <Field label="% IVA">
+            <input
+              type="number"
+              min={0}
+              max={30}
+              className={adminInput}
+              value={settings.taxRate ?? 0}
+              onChange={(e) => set("taxRate", Number(e.target.value))}
+            />
           </Field>
         </section>
 

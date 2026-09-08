@@ -1,0 +1,77 @@
+[
+  {
+    "id": "FAC-2026-0001",
+    "number": 1,
+    "type": "invoice",
+    "bookingId": "BK-1001",
+    "createdAt": "2026-08-20T10:15:05.000Z",
+    "customer": {
+      "name": "Carmen Ruiz",
+      "email": "carmen.demo@email.com",
+      "phone": "+34 612 333 444"
+    },
+    "lines": [
+      {
+        "description": "Traslado Aeropuerto → Costa Teguise",
+        "qty": 1,
+        "unitPrice": 40,
+        "total": 40
+      }
+    ],
+    "subtotal": 40,
+    "taxRate": 0,
+    "taxAmount": 0,
+    "total": 40,
+    "status": "issued"
+  },
+  {
+    "id": "FAC-2026-0002",
+    "number": 2,
+    "type": "invoice",
+    "bookingId": "BK-1002",
+    "createdAt": "2026-08-22T14:40:05.000Z",
+    "customer": {
+      "name": "James Wilson",
+      "email": "james.demo@email.com",
+      "phone": "+44 7700 900123"
+    },
+    "lines": [
+      {
+        "description": "Traslado Ida y vuelta Aeropuerto ↔ Playa Blanca",
+        "qty": 1,
+        "unitPrice": 100,
+        "total": 100
+      }
+    ],
+    "subtotal": 100,
+    "taxRate": 0,
+    "taxAmount": 0,
+    "total": 100,
+    "status": "issued"
+  },
+  {
+    "id": "FAC-2026-0003",
+    "number": 3,
+    "type": "invoice",
+    "bookingId": "BK-1003",
+    "createdAt": "2026-08-25T09:05:05.000Z",
+    "customer": {
+      "name": "Laura Méndez",
+      "email": "laura.demo@email.com",
+      "phone": "+34 600 111 222"
+    },
+    "lines": [
+      {
+        "description": "Traslado Puerto del Carmen → Aeropuerto",
+        "qty": 1,
+        "unitPrice": 40,
+        "total": 40
+      }
+    ],
+    "subtotal": 40,
+    "taxRate": 0,
+    "taxAmount": 0,
+    "total": 40,
+    "status": "issued"
+  }
+]

@@ -7,10 +7,10 @@ import { Loader2, MessageCircle, Send, Sparkles, X } from "lucide-react";
 type Msg = { role: "user" | "assistant"; content: string };
 
 const suggestions = [
-  "¿Ruta Sur o Grand Tour?",
   "Traslado a Playa Blanca",
-  "Vengo en crucero un día",
-  "Diferencia grupo reducido / grande",
+  "¿Cuánto cuesta Costa Teguise?",
+  "Formas de pago",
+  "¿Cómo gestiono mi reserva?",
 ];
 
 export function AIChat() {
@@ -22,7 +22,7 @@ export function AIChat() {
     {
       role: "assistant",
       content:
-        "¡Hola! Soy el asistente de Lanzarote Travels. Pregúntame por excursiones, precios, traslados o si llegas en crucero.",
+        "¡Hola! Soy el asistente de Lanzarote Travels. Pregúntame por destinos, precios o formas de pago de traslados.",
     },
   ]);
   const endRef = useRef<HTMLDivElement>(null);

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { CheckCircle2, HeartHandshake, MapPinned, Shield } from "lucide-react";
+import { CheckCircle2, Clock, Plane, Shield } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
 import { getSettings } from "@/lib/content";
 
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Sobre nosotros",
   description:
-    "Conoce Lanzarote Travels: excursiones locales con guía oficial, grupos reducidos y grandes, y traslados privados.",
+    "Conoce Lanzarote Travels: traslados privados aeropuerto ↔ hotel con chófer local.",
 };
 
 export default async function SobreNosotrosPage() {
@@ -36,7 +36,7 @@ export default async function SobreNosotrosPage() {
             {paragraphs[0]}
           </p>
           <div className="mt-6 space-y-4 text-base leading-relaxed text-ink-muted">
-            {paragraphs.slice(1, 3).map((p) => (
+            {paragraphs.slice(1).map((p) => (
               <p key={p.slice(0, 48)}>{p}</p>
             ))}
           </div>
@@ -57,10 +57,6 @@ export default async function SobreNosotrosPage() {
           <h2 className="font-display text-3xl text-ink md:text-4xl">
             Lo que nos define
           </h2>
-          <p className="mt-2 max-w-2xl text-ink-muted">
-            Valores que guían cada reserva, cada recogida y cada vuelta al hotel
-            o al puerto.
-          </p>
           <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {values.map((value) => (
               <li
@@ -79,19 +75,19 @@ export default async function SobreNosotrosPage() {
         <div className="grid gap-6 md:grid-cols-3">
           {[
             {
-              icon: MapPinned,
-              title: "Conocimiento local",
-              text: "Guías oficiales y conductores de la isla que conocen Timanfaya, La Geria y los rincones con mejor luz.",
+              icon: Plane,
+              title: "Recogida en terminal",
+              text: "Te esperamos en llegadas con cartel y ayuda con el equipaje.",
             },
             {
-              icon: HeartHandshake,
-              title: "Trato cercano",
-              text: "Te escuchamos: si viajas con niños, en crucero o quieres un ritmo más pausado, adaptamos la propuesta.",
+              icon: Clock,
+              title: "Seguimiento de vuelos",
+              text: "Si el vuelo se retrasa, adaptamos la recogida sin coste extra.",
             },
             {
               icon: Shield,
-              title: "Transparencia",
-              text: "Precios claros, qué incluye cada tour y opciones de pago sin sorpresas el día de la salida.",
+              title: "Precio cerrado",
+              text: "Tarifa por vehículo, formas de pago claras y sin sorpresas.",
             },
           ].map((item) => (
             <div
@@ -111,7 +107,7 @@ export default async function SobreNosotrosPage() {
           <div className="relative min-h-[260px]">
             <Image
               src={settings.aboutImage}
-              alt="Paisaje volcánico"
+              alt="Paisaje de Lanzarote"
               fill
               className="object-cover opacity-80"
               sizes="(max-width:768px) 100vw, 50vw"
@@ -124,28 +120,20 @@ export default async function SobreNosotrosPage() {
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                href="/excursiones"
-                className="rounded-md bg-ocean px-5 py-2.5 text-sm font-semibold text-white hover:bg-coral-hover"
+                href="/traslados"
+                className="rounded-md bg-ocean px-5 py-2.5 text-sm font-semibold text-white hover:bg-ocean-deep"
               >
-                Ver excursiones
+                Reservar traslado
               </Link>
               <Link
-                href="/traslados"
+                href="/contacto"
                 className="rounded-md border border-white/30 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10"
               >
-                Ver traslados
+                Contacto
               </Link>
             </div>
           </div>
         </div>
-
-        {paragraphs.length > 3 && (
-          <div className="mx-auto mt-14 max-w-3xl space-y-4 text-base leading-relaxed text-ink-muted">
-            {paragraphs.slice(3).map((p) => (
-              <p key={p.slice(0, 48)}>{p}</p>
-            ))}
-          </div>
-        )}
       </section>
     </>
   );
